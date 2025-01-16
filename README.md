@@ -4,7 +4,7 @@ A web-based exploratory search system leveraging CLIP (Contrastive Language-Imag
 
 ## Overview
 
-This project builds upon the research presented in ["Integrating Visual and Textual Inputs for Searching Large-Scale Map Collections with CLIP"](https://arxiv.org/abs/2410.01190) by Mahowald and Lee. Their work demonstrates the potential for interactively searching large-scale map collections using:
+This project builds upon the research presented in [Integrating Visual and Textual Inputs for Searching Large-Scale Map Collections with CLIP](https://arxiv.org/abs/2410.01190) by Mahowald and Lee. Their work demonstrates the potential for interactively searching large-scale map collections using:
 - Natural language inputs (e.g., "maps with sea monsters")
 - Visual inputs (reverse image search)
 - Multimodal inputs (e.g., an example map + "more grayscale")
@@ -29,12 +29,6 @@ Our project extends their work in two main directions:
 ```bash
 pip install -r requirements.txt
 ```
-
-## License
-
-This project is licensed under Creative Commons [License Type] - see the [LICENSE.md](LICENSE.md) file for details.
-
-## Acknowledgments
 
 ## References
 
