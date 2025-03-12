@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { Gallery } from "react-grid-gallery";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
@@ -8,6 +8,82 @@ import SearchBar from './components/SearchBar';
 import PhotoInfo from './components/PhotoInfo';
 import './App.css';
 import { searchPhotos } from './services/api';
+
+// Create a new SearchResults component at the top of your file, before the App component
+const SearchResults = React.memo(({ 
+  photos, 
+  isLoading, 
+  hasSearched, 
+  error, 
+  openLightbox, 
+  viewerIsOpen, 
+  currentImage, 
+  closeLightbox, 
+  lightboxSlides, 
+  thumbnailImageComponent 
+}) => {
+  if (isLoading) {
+    return (
+      <div className="loading-indicator">
+        <div className="spinner"></div>
+        <p>Searching historical photographs...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-message">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (photos.length > 0) {
+    return (
+      <div className="gallery-container">
+        <Gallery 
+          images={photos}
+          enableImageSelection={false}
+          thumbnailImageComponent={thumbnailImageComponent}
+          onClick={(index) => openLightbox(index)}
+          margin={2}
+          rowHeight={180}
+          targetRowHeight={200}
+          containerWidth={window.innerWidth * 0.95}
+        />
+        {viewerIsOpen && (
+          <Lightbox
+            slides={lightboxSlides}
+            open={viewerIsOpen}
+            index={currentImage}
+            close={closeLightbox}
+            controller={{ closeOnBackdropClick: true }}
+            render={{
+              buttonPrev: photos.length <= 1 ? () => null : undefined,
+              buttonNext: photos.length <= 1 ? () => null : undefined,
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  if (hasSearched) {
+    return (
+      <div className="no-results">
+        <p>No photographs found. Try a different search query.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="welcome-message">
+      <p>Enter a search term to explore historical photographs.</p>
+      <p>Try searching for subjects, time periods, locations, or visual elements.</p>
+    </div>
+  );
+});
 
 function App() {
   const [photos, setPhotos] = useState([]);
@@ -30,11 +106,17 @@ function App() {
       height: 600, // Default height for lightbox
       caption: result.metadata.title || result.file_name || 'Untitled',
       alt: result.metadata.title || 'Historical Photograph',
-      tags: [
-        { value: `Similarity: ${(result.similarity * 100).toFixed(1)}%`, title: "Similarity" }
-      ],
-      // Store the original result data for use in the modal
-      originalData: result
+      originalData: result,
+      customOverlay: (
+        <div className="custom-overlay">
+          <div className="custom-overlay-title">
+            {result.metadata.title || result.file_name || 'Untitled'}
+          </div>
+          <div className="custom-overlay-similarity">
+            Similarity score: {result.similarity.toFixed(3)}
+          </div>
+        </div>
+      )
     }));
   };
 
@@ -59,12 +141,6 @@ function App() {
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && searchInputRef.current === document.activeElement) {
-      handleSearch(searchQuery);
-    }
-  };
-
   const openLightbox = useCallback((index) => {
     setCurrentImage(index);
     setViewerIsOpen(true);
@@ -76,7 +152,7 @@ function App() {
   };
 
   // Custom thumbnail image component for Gallery
-  const thumbnailImageComponent = ({ item, imageProps }) => (
+  const thumbnailImageComponent = useCallback(({ item, imageProps }) => (
     <LazyLoadImage
       alt={imageProps.alt}
       effect="blur"
@@ -85,40 +161,22 @@ function App() {
       width={item.thumbnailWidth}
       style={{ objectFit: 'cover' }}
       className="historical-image"
+      placeholderSrc='https://placehold.co/300x200'
     />
-  );
+  ), []);
 
   // Format photos for the Lightbox component
-  const lightboxSlides = photos.map(photo => ({
+  const lightboxSlides = useMemo(() => photos.map(photo => ({
     src: photo.src,
     alt: photo.alt,
     title: photo.caption,
     description: photo.originalData ? (
       <PhotoInfo photo={photo.originalData} />
     ) : null
-  }));
-
-  // Custom overlay for the gallery items
-  const customOverlay = (props) => {
-    const { item } = props;
-    return (
-      <div className="custom-overlay">
-        <div className="custom-overlay-title">{item.caption}</div>
-        {item.tags && item.tags.length > 0 && (
-          <div className="custom-overlay-tags">
-            {item.tags.map((tag, index) => (
-              <span key={index} className="custom-overlay-tag">
-                {tag.value}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  })), [photos]);
 
   return (
-    <div className="App" onKeyDown={handleKeyPress}>
+    <div className="App">
       <header className="App-header">
         <h1>Digital Collections Explorer</h1>
         <p>Explore historical photographs using natural language search</p>
@@ -132,69 +190,21 @@ function App() {
             onSearch={() => handleSearch(searchQuery)}
             inputRef={searchInputRef}
           />
-          
-          <button 
-            className="search-button" 
-            onClick={() => handleSearch(searchQuery)}
-            disabled={isLoading || !searchQuery.trim()}
-          >
-            {isLoading ? 'Searching...' : 'Search'}
-          </button>
         </div>
 
-        {error && (
-          <div className="error-message">
-            <p>{error}</p>
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className="loading-indicator">
-            <div className="spinner"></div>
-            <p>Searching historical photographs...</p>
-          </div>
-        ) : photos.length > 0 ? (
-          <div className="gallery-container">
-            <Gallery 
-              images={photos}
-              enableImageSelection={false}
-              thumbnailImageComponent={thumbnailImageComponent}
-              customOverlay={customOverlay}
-              onClick={(index) => openLightbox(index)}
-              margin={5}
-              rowHeight={180}
-            />
-            {viewerIsOpen && (
-              <Lightbox
-                slides={lightboxSlides}
-                open={viewerIsOpen}
-                index={currentImage}
-                close={closeLightbox}
-                controller={{ closeOnBackdropClick: true }}
-                render={{
-                  buttonPrev: photos.length <= 1 ? () => null : undefined,
-                  buttonNext: photos.length <= 1 ? () => null : undefined,
-                }}
-              />
-            )}
-          </div>
-        ) : hasSearched ? (
-          <div className="no-results">
-            <p>No photographs found. Try a different search query.</p>
-          </div>
-        ) : (
-          <div className="welcome-message">
-            <p>Enter a search term to explore historical photographs.</p>
-            <p>Try searching for subjects, time periods, locations, or visual elements.</p>
-          </div>
-        )}
+        <SearchResults 
+          photos={photos}
+          isLoading={isLoading}
+          hasSearched={hasSearched}
+          error={error}
+          openLightbox={openLightbox}
+          viewerIsOpen={viewerIsOpen}
+          currentImage={currentImage}
+          closeLightbox={closeLightbox}
+          lightboxSlides={lightboxSlides}
+          thumbnailImageComponent={thumbnailImageComponent}
+        />
       </main>
-      
-      <footer className="App-footer">
-        <p>
-          Digital Collections Explorer - Powered by CLIP embeddings
-        </p>
-      </footer>
     </div>
   );
 }

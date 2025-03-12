@@ -4,11 +4,12 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 /**
  * Search for photographs by text query
  * @param {string} query - The text query
+ * @param {number} limit - Maximum number of results to return (default: 25)
  * @returns {Promise<Array>} - Array of search results
  */
-export const searchPhotos = async (query) => {
+export const searchPhotos = async (query, limit = 50) => {
   try {
-    const response = await fetch(`${API_URL}/api/search/text?query=${encodeURIComponent(query)}`);
+    const response = await fetch(`${API_URL}/api/search/text?query=${encodeURIComponent(query)}&limit=${limit}`);
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);

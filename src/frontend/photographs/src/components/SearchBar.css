@@ -11,21 +11,22 @@
   flex: 1;
   padding: 0.75rem 1rem;
   font-size: 1rem;
-  border: 2px solid #d0b49f;
+  border: 2px solid #333;
   border-radius: 4px 0 0 4px;
-  background-color: #fff;
-  font-family: 'Georgia', serif;
+  background-color: #2a2a2a;
+  color: #f8f5f0;
+  font-family: 'Lato', sans-serif;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #6b4226;
+  border-color: #555;
 }
 
 .search-bar .search-button {
   border-radius: 0 4px 4px 0;
   padding: 0.75rem 1rem;
-  background-color: #6b4226;
+  background-color: #333;
   color: white;
   border: none;
   cursor: pointer;
@@ -33,10 +34,11 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  transition: background-color 0.2s ease;
 }
 
 .search-bar .search-button:hover {
-  background-color: #8c5a35;
+  background-color: #444;
 }
 
 .search-icon {
@@ -46,7 +48,7 @@
 .search-suggestions {
   margin-top: 0.5rem;
   font-size: 0.85rem;
-  color: #666;
+  color: #b0b0b0;
   font-style: italic;
 }
 
