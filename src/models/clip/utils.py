@@ -25,7 +25,7 @@ def compute_similarity(query_features, target_features):
     
     return similarity
 
-def generate_embeddings(model, processor, image_paths, batch_size=32):
+def generate_embeddings(model, processor, image_paths, batch_size=32, device="cuda"):
     """
     Generate embeddings for a list of image paths
     
@@ -34,9 +34,12 @@ def generate_embeddings(model, processor, image_paths, batch_size=32):
         processor: Image processor
         image_paths: List of paths to images (can be recursive)
         batch_size: Batch size for processing
+        device: Device to use for processing
         
     Returns:
-        numpy.ndarray: Image embeddings
+        tuple: (embeddings, valid_indices)
+            - embeddings: numpy.ndarray of image embeddings
+            - valid_indices: list of indices of valid images
     """
     embeddings = []
     valid_indices = []  # Track indices of valid images
@@ -76,11 +79,21 @@ def generate_embeddings(model, processor, image_paths, batch_size=32):
         
         # Process batch
         try:
-            image_inputs = processor.process_image(images)
+            # Handle different processor interfaces
+            if hasattr(processor, 'process_image'):
+                image_inputs = processor.process_image(images)
+            else:
+                image_inputs = processor(images=images, return_tensors="pt", padding=True)
+                if device != "cpu":
+                    image_inputs = {k: v.to(device) for k, v in image_inputs.items()}
             
             # Generate embeddings
             with torch.no_grad():
-                batch_embeddings = model.encode_image(image_inputs)
+                if hasattr(model, 'encode_image'):
+                    batch_embeddings = model.encode_image(image_inputs)
+                else:
+                    batch_embeddings = model.get_image_features(**image_inputs)
+                
                 batch_embeddings = batch_embeddings / batch_embeddings.norm(dim=-1, keepdim=True)
             
             embeddings.append(batch_embeddings.cpu().numpy())
@@ -90,10 +103,21 @@ def generate_embeddings(model, processor, image_paths, batch_size=32):
             # If batch processing fails, try processing images individually
             for j, img in enumerate(images):
                 try:
-                    single_input = processor.process_image([img])
+                    if hasattr(processor, 'process_image'):
+                        single_input = processor.process_image([img])
+                    else:
+                        single_input = processor(images=[img], return_tensors="pt", padding=True)
+                        if device != "cpu":
+                            single_input = {k: v.to(device) for k, v in single_input.items()}
+                    
                     with torch.no_grad():
-                        single_embedding = model.encode_image(single_input)
+                        if hasattr(model, 'encode_image'):
+                            single_embedding = model.encode_image(single_input)
+                        else:
+                            single_embedding = model.get_image_features(**single_input)
+                        
                         single_embedding = single_embedding / single_embedding.norm(dim=-1, keepdim=True)
+                    
                     embeddings.append(single_embedding.cpu().numpy())
                     valid_indices.append(batch_valid_indices[j])
                 except Exception as inner_e:
@@ -101,7 +125,7 @@ def generate_embeddings(model, processor, image_paths, batch_size=32):
     
     if not embeddings:
         logger.error("No valid embeddings generated!")
-        return np.array([])
+        return np.array([]), []
     
     # Concatenate all batches
     all_embeddings = np.vstack(embeddings)

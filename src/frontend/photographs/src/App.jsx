@@ -1,78 +1,35 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Gallery } from "react-grid-gallery";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import SearchBar from './components/SearchBar';
-import CollectionFilter from './components/CollectionFilter';
 import PhotoInfo from './components/PhotoInfo';
 import './App.css';
+import { searchPhotos } from './services/api';
 
 function App() {
   const [photos, setPhotos] = useState([]);
-  const [collections, setCollections] = useState([]);
-  const [selectedCollections, setSelectedCollections] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentImage, setCurrentImage] = useState(0);
   const [viewerIsOpen, setViewerIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [projectName, setProjectName] = useState('Historical Photograph Explorer');
   const [error, setError] = useState(null);
   const searchInputRef = useRef(null);
-
-  // Fetch configuration and collections on component mount
-  useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const response = await fetch('/api/config');
-        if (response.ok) {
-          const data = await response.json();
-          setProjectName(data.projectName || 'Historical Photograph Explorer');
-        }
-      } catch (error) {
-        console.error('Error fetching configuration:', error);
-      }
-    };
-
-    const fetchCollections = async () => {
-      try {
-        const response = await fetch('/api/collections');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch collections: ${response.status}`);
-        }
-        const data = await response.json();
-        setCollections(data.collections.filter(c => c.type === 'photographs'));
-        
-        // Auto-select all photograph collections if none are selected
-        if (data.collections.length > 0 && selectedCollections.length === 0) {
-          const photoCollectionIds = data.collections
-            .filter(c => c.type === 'photographs')
-            .map(c => c.id);
-          setSelectedCollections(photoCollectionIds);
-        }
-      } catch (error) {
-        console.error('Error fetching collections:', error);
-        setError('Failed to load collections. Please try refreshing the page.');
-      }
-    };
-
-    fetchConfig();
-    fetchCollections();
-  }, []);
 
   // Format search results into the format expected by react-grid-gallery
   const formatPhotosForGallery = (results) => {
     return results.map(result => ({
-      src: `/api/images/${result.collection_id}/${result.metadata.path}`,
-      thumbnail: `/api/thumbnails/${result.collection_id}/${result.metadata.path}`,
-      thumbnailWidth: result.metadata.width || 320,
-      thumbnailHeight: result.metadata.height || 212,
-      width: result.metadata.width || 800,
-      height: result.metadata.height || 600,
-      caption: result.metadata.title || result.metadata.filename || 'Untitled',
-      alt: result.metadata.caption || result.metadata.title || 'Historical Photograph',
+      src: `/api/images/${result.file_path}?size=full`,
+      thumbnail: `/api/images/${result.file_path}?size=thumbnail`,
+      thumbnailWidth: 320, // Default width if not available
+      thumbnailHeight: 212, // Default height with 3:2 aspect ratio
+      width: 800, // Default width for lightbox
+      height: 600, // Default height for lightbox
+      caption: result.metadata.title || result.file_name || 'Untitled',
+      alt: result.metadata.title || 'Historical Photograph',
       tags: [
         { value: `Similarity: ${(result.similarity * 100).toFixed(1)}%`, title: "Similarity" }
       ],
@@ -81,7 +38,7 @@ function App() {
     }));
   };
 
-  const handleSearch = async (query = searchQuery) => {
+  const handleSearch = async (query) => {
     if (!query.trim()) {
       setError('Please enter a search term');
       return;
@@ -91,19 +48,8 @@ function App() {
     setError(null);
     
     try {
-      const collectionParam = selectedCollections.length > 0 
-        ? `&collection_ids=${selectedCollections.join(',')}` 
-        : '';
-      
-      const response = await fetch(`/api/search/text?query=${encodeURIComponent(query)}${collectionParam}`);
-      
-      if (!response.ok) {
-        throw new Error(`Search failed: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      const formattedPhotos = formatPhotosForGallery(data.results);
-      setPhotos(formattedPhotos);
+      const results = await searchPhotos(query);
+      setPhotos(formatPhotosForGallery(results));
       setHasSearched(true);
     } catch (error) {
       console.error('Error performing search:', error);
@@ -115,7 +61,7 @@ function App() {
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && searchInputRef.current === document.activeElement) {
-      handleSearch();
+      handleSearch(searchQuery);
     }
   };
 
@@ -174,7 +120,7 @@ function App() {
   return (
     <div className="App" onKeyDown={handleKeyPress}>
       <header className="App-header">
-        <h1>{projectName}</h1>
+        <h1>Digital Collections Explorer</h1>
         <p>Explore historical photographs using natural language search</p>
       </header>
       
@@ -183,19 +129,13 @@ function App() {
           <SearchBar 
             searchQuery={searchQuery} 
             setSearchQuery={setSearchQuery}
-            onSearch={handleSearch}
+            onSearch={() => handleSearch(searchQuery)}
             inputRef={searchInputRef}
-          />
-          
-          <CollectionFilter 
-            collections={collections}
-            selectedCollections={selectedCollections}
-            setSelectedCollections={setSelectedCollections}
           />
           
           <button 
             className="search-button" 
-            onClick={() => handleSearch()}
+            onClick={() => handleSearch(searchQuery)}
             disabled={isLoading || !searchQuery.trim()}
           >
             {isLoading ? 'Searching...' : 'Search'}
@@ -240,7 +180,7 @@ function App() {
           </div>
         ) : hasSearched ? (
           <div className="no-results">
-            <p>No photographs found. Try a different search query or select different collections.</p>
+            <p>No photographs found. Try a different search query.</p>
           </div>
         ) : (
           <div className="welcome-message">
@@ -259,4 +199,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

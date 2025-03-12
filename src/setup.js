@@ -129,6 +129,6 @@ function displayNextSteps(collectionType) {
   console.log(chalk.yellow('\nNext steps:'));
   
   console.log('1. Add your images to ' + chalk.cyan('data/raw/'));
-  console.log('2. Run ' + chalk.cyan('python -m src.models.generate_embeddings'));
+  console.log('2. Run ' + chalk.cyan('python -m src.models.clip.generate_embeddings'));
   console.log('3. Start the server with ' + chalk.cyan('python -m src.backend.main'));
 } 

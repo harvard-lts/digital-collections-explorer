@@ -46,10 +46,11 @@ Thumbs.db
 data/raw/*
 data/processed/*
 data/embeddings/*
+data/thumbnails/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/embeddings/.gitkeep
-
+!data/thumbnails/.gitkeep
 # Model files
 *.pth
 *.pt
