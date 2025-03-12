@@ -49,4 +49,4 @@ def get_processor():
             processed = self.tokenizer(texts)
             return processed.to(self.device)
     
-    return Processor(preprocess, tokenizer) 
+    return Processor(preprocess, tokenizer)

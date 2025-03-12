@@ -110,4 +110,4 @@ def generate_embeddings(model, processor, image_paths, batch_size=32):
     logger.info(f"Skipped {skipped_images} invalid images")
     
     # Return embeddings and valid indices
-    return all_embeddings, valid_indices 
+    return all_embeddings, valid_indices

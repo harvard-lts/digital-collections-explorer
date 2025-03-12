@@ -87,11 +87,6 @@ The API server will start at http://localhost:8000
 
 ### Customizing the Frontend
 
-If you want to customize the frontend:
-
-1. Edit components in `src/frontend/photographs/src/components`
-2. Modify styles in `src/frontend/photographs/src/App.css`
-
 #### Development Mode
 
 For active development with hot-reloading:
@@ -102,7 +97,7 @@ For active development with hot-reloading:
 python -m src.backend.main
 
 # Start the frontend development server
-cd src/frontend/photographs
+cd src/frontend/[photographs|maps|web-archives]
 npm run dev
 ```
 
@@ -110,11 +105,10 @@ This will start a development server at http://localhost:3000 with hot-reloading
 
 #### Production Build
 
-When you're ready to deploy your changes:
+When you're ready to deploy your changes, and only if you have customized the frontend and made code changes, since Step 2 has already built the frontend once:
 
 ```bash
-cd src/frontend/photographs
-npm run build
+npm run frontend-build
 ```
 
 Then restart the backend server to serve the updated frontend.

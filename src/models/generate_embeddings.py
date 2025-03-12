@@ -16,8 +16,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate CLIP embeddings for image collections")
-    parser.add_argument("--collection", type=str, required=True, help="Collection name/directory")
+    parser = argparse.ArgumentParser(description="Generate CLIP embeddings for images")
     parser.add_argument("--config", type=str, default="config.json", help="Path to config file")
     parser.add_argument("--batch_size", type=int, default=None, help="Override batch size from config")
     args = parser.parse_args()
@@ -26,7 +25,7 @@ def main():
     config = load_config(args.config)
     
     # Set up paths
-    collection_path = Path(config["raw_data_dir"]) / args.collection
+    raw_data_dir = Path(config["raw_data_dir"])
     output_dir = Path(config["embeddings_dir"])
     output_dir.mkdir(exist_ok=True, parents=True)
     
@@ -51,28 +50,15 @@ def main():
     image_paths = []
     metadata = []
     
-    logger.info(f"Scanning collection directory: {collection_path}")
+    logger.info(f"Scanning raw data directory: {raw_data_dir}")
     
     # Use recursive glob pattern to find all images in all subdirectories with case-insensitive extensions
     for pattern in image_patterns:
-        glob_pattern = str(collection_path / f"**/{pattern}")
+        glob_pattern = str(raw_data_dir / f"**/{pattern}")
         found_images = glob.glob(glob_pattern, recursive=True)
         if found_images:
             logger.info(f"Found {len(found_images)} images with pattern {pattern}")
             image_paths.extend(found_images)
-    
-    # Alternative approach using os.walk for systems where glob might not handle case sensitivity well
-    # if not image_paths:
-    #     logger.info("No images found with glob patterns, trying alternative method with os.walk")
-    #     for root, _, files in os.walk(collection_path):
-    #         for file in files:
-    #             # Check if file extension (case insensitive) matches any of our image extensions
-    #             if any(file.lower().endswith(ext) for ext in image_extensions_base):
-    #                 full_path = os.path.join(root, file)
-    #                 image_paths.append(full_path)
-        
-    #     if image_paths:
-    #         logger.info(f"Found {len(image_paths)} images using os.walk method")
     
     # Sort paths for consistency
     image_paths.sort()
@@ -80,21 +66,26 @@ def main():
     # Create metadata for each image
     for img_path in image_paths:
         img_path = Path(img_path)
-        rel_path = img_path.relative_to(collection_path)
+        rel_path = img_path.relative_to(raw_data_dir)
+        
+        # Determine collection from directory structure (first level subdirectory)
+        # If image is directly in raw_data_dir, use "default" as collection
+        collection = rel_path.parts[0] if len(rel_path.parts) > 1 else "default"
+        
         metadata.append({
             "id": str(rel_path),
             "path": str(rel_path),
             "filename": img_path.name,
-            "collection": args.collection,
-            # Add subdirectory information
+            "collection": collection,
+            # Add subdirectory information (excluding collection name if present)
             "subdirectory": str(rel_path.parent) if rel_path.parent != Path('.') else ""
         })
     
     total_images = len(image_paths)
-    logger.info(f"Found {total_images} images in collection '{args.collection}' (including all subdirectories)")
+    logger.info(f"Found {total_images} images in raw data directory (including all subdirectories)")
     
     if total_images == 0:
-        logger.error(f"No images found in {collection_path}. Please check the path and image formats.")
+        logger.error(f"No images found in {raw_data_dir}. Please check the path and image formats.")
         return
     
     # Generate embeddings
@@ -113,11 +104,12 @@ def main():
     valid_metadata = [metadata[i] for i in valid_indices]
     
     # Save embeddings and metadata
-    np.save(str(output_dir / f"{args.collection}.npy"), embeddings)
-    with open(output_dir / f"{args.collection}_metadata.json", 'w') as f:
+    output_name = "images"  # Default output name
+    np.save(str(output_dir / f"{output_name}.npy"), embeddings)
+    with open(output_dir / f"{output_name}_metadata.json", 'w') as f:
         json.dump(valid_metadata, f, indent=2)
     
-    logger.info(f"Saved embeddings and metadata for collection '{args.collection}'")
+    logger.info(f"Saved embeddings and metadata for all images")
     logger.info(f"Embeddings shape: {embeddings.shape}")
     logger.info(f"Successfully processed {len(valid_metadata)} out of {total_images} images")
     
@@ -125,9 +117,9 @@ def main():
     if len(valid_metadata) < total_images:
         skipped_indices = set(range(total_images)) - set(valid_indices)
         skipped_paths = [image_paths[i] for i in skipped_indices]
-        with open(output_dir / f"{args.collection}_skipped.json", 'w') as f:
+        with open(output_dir / f"{output_name}_skipped.json", 'w') as f:
             json.dump(skipped_paths, f, indent=2)
-        logger.info(f"Saved list of {len(skipped_paths)} skipped images to {args.collection}_skipped.json")
+        logger.info(f"Saved list of {len(skipped_paths)} skipped images to {output_name}_skipped.json")
 
 if __name__ == "__main__":
-    main() 
+    main()

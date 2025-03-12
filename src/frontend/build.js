@@ -8,13 +8,23 @@ const { execSync } = require('child_process');
 let collectionType = 'photographs'; // Default
 
 try {
-  const activeTypePath = path.resolve(__dirname, 'active-type.json');
-  if (fs.existsSync(activeTypePath)) {
-    const activeType = JSON.parse(fs.readFileSync(activeTypePath, 'utf8'));
-    collectionType = activeType.type || 'photographs';
+  // Read from config.json instead of active-type.json
+  const configPath = path.resolve(process.cwd(), 'config.json');
+  if (fs.existsSync(configPath)) {
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    // Get collection_type from frontend_config
+    if (config.frontend_config && config.frontend_config.collection_type) {
+      collectionType = config.frontend_config.collection_type;
+    } else {
+      console.log('No collection_type found in config.json frontend_config');
+      console.log('Defaulting to photographs');
+    }
+  } else {
+    console.log('config.json not found');
+    console.log('Defaulting to photographs');
   }
 } catch (error) {
-  console.error('Error reading active collection type:', error);
+  console.error('Error reading configuration:', error);
   console.log('Defaulting to photographs');
 }
 
