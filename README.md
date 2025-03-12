@@ -29,7 +29,7 @@ Our project extends their work in two main directions:
 ### Prerequisites
 
 - Python 3.8+ 
-- Node.js 14+ (for frontend)
+- Node.js 14+
 - Git
 - Docker (optional, for containerized deployment)
 
@@ -92,7 +92,7 @@ The API server will start at http://localhost:8000
 For active development with hot-reloading:
 
 ```bash
-# First, make sure your the backend server is up
+# First, make sure the backend server is up
 # If the server is not ready, cd into the root path and run:
 python -m src.backend.main
 
