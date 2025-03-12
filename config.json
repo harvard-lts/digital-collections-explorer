@@ -1,0 +1,21 @@
+{
+  "data_dir": "data",
+  "raw_data_dir": "data/raw",
+  "processed_data_dir": "data/processed",
+  "embeddings_dir": "data/embeddings",
+  "model_config": {
+    "clip_model": "openai/clip-vit-base-patch32",
+    "batch_size": 32,
+    "device": "cuda"
+  },
+  "api_config": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "debug": true
+  },
+  "frontend_config": {
+    "port": 3000,
+    "collection_type": "photographs",
+    "project_name": "My Photo Explorer"
+  }
+}

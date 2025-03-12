@@ -1,0 +1,15 @@
+{
+  "name": "digital-collections-explorer",
+  "version": "0.0.1",
+  "description": "A web-based exploratory search system for digital collections using CLIP",
+  "scripts": {
+    "setup": "node src/setup.js",
+    "frontend-build": "node src/frontend/build.js"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "react-grid-gallery": "^1.0.1",
+    "react-lazy-load-image-component": "^1.6.3",
+    "yet-another-react-lightbox": "^3.21.7"
+  }
+}
