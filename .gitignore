@@ -72,6 +72,9 @@ yarn-error.log*
 node_modules/
 **/node_modules/
 
+# Vite cache
+.vite/
+
 # Frontend
 src/frontend/**/build/
 src/frontend/**/dist/
