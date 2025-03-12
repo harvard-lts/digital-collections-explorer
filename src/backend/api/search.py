@@ -5,11 +5,14 @@ from PIL import Image
 import json
 import pickle
 from pathlib import Path
+from PIL import Image
+import logging
 
 from src.backend.utils.config import load_config
 from src.models.clip.utils import compute_similarity
 
 config = load_config()
+logger = logging.getLogger(__name__)
 
 def load_embeddings(collection_ids=None):
     """Load pre-computed embeddings for the specified collections"""
@@ -33,6 +36,15 @@ def load_embeddings(collection_ids=None):
                 all_metadata[collection_id] = json.load(f)
     
     return all_embeddings, all_metadata
+
+def extract_image_dimensions(image_path):
+    """Extract image dimensions for the gallery"""
+    try:
+        with Image.open(image_path) as img:
+            return img.width, img.height
+    except Exception as e:
+        logger.warning(f"Could not get dimensions for {image_path}: {e}")
+        return None, None
 
 def text_search_handler(query: str, model, processor, collection_ids=None, limit=20):
     """Handle text-based search"""
@@ -58,6 +70,15 @@ def text_search_handler(query: str, model, processor, collection_ids=None, limit
         # Add to results
         for idx in top_indices:
             item_metadata = metadata[idx]
+            # Get the full path to the image
+            img_path = Path(config["raw_data_dir"]) / collection_id / item_metadata["path"]
+            
+            # Get image dimensions if not already in metadata
+            if "width" not in item_metadata or "height" not in item_metadata:
+                width, height = extract_image_dimensions(img_path)
+                item_metadata["width"] = width
+                item_metadata["height"] = height
+            
             results.append({
                 "collection_id": collection_id,
                 "item_id": item_metadata["id"],
@@ -94,6 +115,15 @@ def image_search_handler(image: Image.Image, model, processor, collection_ids=No
         # Add to results
         for idx in top_indices:
             item_metadata = metadata[idx]
+            # Get the full path to the image
+            img_path = Path(config["raw_data_dir"]) / collection_id / item_metadata["path"]
+            
+            # Get image dimensions if not already in metadata
+            if "width" not in item_metadata or "height" not in item_metadata:
+                width, height = extract_image_dimensions(img_path)
+                item_metadata["width"] = width
+                item_metadata["height"] = height
+            
             results.append({
                 "collection_id": collection_id,
                 "item_id": item_metadata["id"],
@@ -140,6 +170,15 @@ def combined_search_handler(image: Image.Image, query: str, model, processor, co
         # Add to results
         for idx in top_indices:
             item_metadata = metadata[idx]
+            # Get the full path to the image
+            img_path = Path(config["raw_data_dir"]) / collection_id / item_metadata["path"]
+            
+            # Get image dimensions if not already in metadata
+            if "width" not in item_metadata or "height" not in item_metadata:
+                width, height = extract_image_dimensions(img_path)
+                item_metadata["width"] = width
+                item_metadata["height"] = height
+            
             results.append({
                 "collection_id": collection_id,
                 "item_id": item_metadata["id"],

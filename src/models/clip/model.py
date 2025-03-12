@@ -8,20 +8,12 @@ from src.backend.utils.config import load_config
 config = load_config()
 
 def get_clip_model(model_name=None):
-    """Get CLIP model, either pre-trained or fine-tuned"""
+    """Get CLIP model"""
     if model_name is None:
         model_name = config["model_config"]["clip_model"]
     
-    # Check if we have a fine-tuned model
-    fine_tuned_path = Path(config["data_dir"]) / "models" / f"{model_name}_fine_tuned.pt"
-    
-    if fine_tuned_path.exists():
-        # Load fine-tuned model
-        model, _, _ = open_clip.create_model_and_transforms(model_name)
-        model.load_state_dict(torch.load(fine_tuned_path))
-    else:
-        # Load pre-trained model
-        model, _, _ = open_clip.create_model_and_transforms(model_name)
+    # Load pre-trained model
+    model, _, _ = open_clip.create_model_and_transforms(model_name)
     
     # Move model to appropriate device
     device = config["model_config"]["device"]

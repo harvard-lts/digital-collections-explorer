@@ -21,7 +21,7 @@ Our project extends their work in two main directions:
   - Historical maps
   - Photographs
   - Web archives
-- Fine-tuned CLIP models for improved accuracy
+- Fine-tuned CLIP models for improved accuracy (coming soon)
 - User-friendly web interface for exploration
 
 ## Quick Start Guide
@@ -40,7 +40,21 @@ git clone https://github.com/hinxcode/digital-collections-explorer.git
 cd digital-collections-explorer
 ```
 
-### Step 2: Set Up the Environment
+### Step 2: Run the Setup Script with Collection Type
+
+```bash
+npm install
+npm run setup -- --type=photographs --name="My Photo Explorer"
+```
+
+Available collection types:
+- `photographs`: For photo collections and image archives
+- `maps`: For map collections (coming soon)
+- `web-archives`: For web archive collections (coming soon)
+
+This will configure the project for your specific collection type and build the frontend.
+
+### Step 3: Set Up the Environment for the Backend
 
 ```bash
 # Create and activate a virtual environment (recommended)
@@ -49,31 +63,21 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Run the setup script to create necessary directories
-chmod +x setup.sh
-./setup.sh
 ```
 
-### Step 3: Prepare Your Collection
+### Step 4: Prepare Your Collection
 
-1. Create a folder for your collection in the `data/raw` directory:
+1. Add your images to the `data/raw` directory. Supported formats include JPG, JPEG, PNG, GIF, BMP, TIFF, and WebP. The images in subdirectories will also be retrieved recursively.
+
+2. Generate embeddings for your collection:
 
 ```bash
-mkdir -p data/raw/my_collection
+python -m src.models.generate_embeddings
 ```
 
-2. Add your images to this folder. Supported formats include JPG, PNG, GIF, BMP, TIFF, and WebP.
+This will process all images in the `data/raw` directory and create embeddings in the `data/embeddings` directory.
 
-3. Generate embeddings for your collection:
-
-```bash
-python -m src.models.generate_embeddings --collection my_collection
-```
-
-This will process all images in your collection and create embeddings in the `data/embeddings` directory.
-
-### Step 4: Start the Backend Server
+### Step 5: Start the Backend Server
 
 ```bash
 python -m src.backend.main
@@ -81,79 +85,44 @@ python -m src.backend.main
 
 The API server will start at http://localhost:8000
 
-### Step 5: Set Up and Start the Frontend
-
-```bash
-cd src/frontend
-npm install
-npm start
-```
-
-The frontend will be available at http://localhost:3000
-
-### Step 6: Use Your Collection Explorer
-
-1. Open your browser and navigate to http://localhost:3000
-2. Use the interface to search your collections:
-   - Text Search: Enter natural language queries like "sunset over mountains"
-   - Image Search: Upload an image to find similar items
-   - Combined Search: Use both text and image inputs for more precise results
-3. Filter results by collection using the collection selector
-
-## Docker Deployment (Alternative)
-
-For a containerized deployment, you can use Docker Compose:
-
-```bash
-# Build and start the containers
-docker-compose up -d
-
-# Generate embeddings for your collection
-docker-compose exec backend python -m src.models.generate_embeddings --collection my_collection
-```
-
-## Advanced Usage
-
-### Adding Multiple Collections
-
-You can add multiple collections to your explorer:
-
-1. Create separate folders for each collection in `data/raw`
-2. Generate embeddings for each collection:
-
-```bash
-python -m src.models.generate_embeddings --collection collection1
-python -m src.models.generate_embeddings --collection collection2
-```
-
-### Fine-tuning CLIP for Your Collections
-
-To improve search results for your specific domain:
-
-1. Prepare a dataset of image-caption pairs in `data/fine_tuning`
-2. Run the fine-tuning script:
-
-```bash
-python -m src.models.fine_tuning.train --dataset my_dataset --epochs 10
-```
-
-This will create a fine-tuned model that better understands your specific collection types.
-
 ### Customizing the Frontend
 
-The frontend is built with React and can be customized:
+If you want to customize the frontend:
 
-1. Edit components in `src/frontend/src/components`
-2. Modify styles in `src/frontend/src/App.css`
-3. Rebuild the frontend:
+1. Edit components in `src/frontend/photographs/src/components`
+2. Modify styles in `src/frontend/photographs/src/App.css`
+
+#### Development Mode
+
+For active development with hot-reloading:
 
 ```bash
-cd src/frontend
+# First, make sure your the backend server is up
+# If the server is not ready, cd into the root path and run:
+python -m src.backend.main
+
+# Start the frontend development server
+cd src/frontend/photographs
+npm run dev
+```
+
+This will start a development server at http://localhost:3000 with hot-reloading enabled. The development server will automatically proxy API requests to the backend at http://localhost:8000.
+
+#### Production Build
+
+When you're ready to deploy your changes:
+
+```bash
+cd src/frontend/photographs
 npm run build
 ```
 
-## Project Structure
+Then restart the backend server to serve the updated frontend.
 
-```bash
-.
-├── config.json
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## References
+
+Mahowald, J., & Lee, B. C. G. (2024). Integrating Visual and Textual Inputs for Searching Large-Scale Map Collections with CLIP. arXiv:2410.01190 [cs.IR]. https://arxiv.org/abs/2410.01190

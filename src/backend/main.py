@@ -9,6 +9,7 @@ from typing import List, Optional, Dict, Any
 import numpy as np
 from PIL import Image
 import io
+from pathlib import Path
 
 # Add the project root to the path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -16,6 +17,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from src.backend.api.search import text_search_handler, image_search_handler, combined_search_handler
 from src.backend.utils.config import load_config
 from src.models.clip.model import get_clip_model, get_processor
+from src.backend.api.config import router as config_router
 
 app = FastAPI(title="Digital Collections Explorer API")
 
@@ -39,6 +41,17 @@ processor = None
 async def startup_event():
     global model, processor
     model, processor = get_clip_model(), get_processor()
+    
+    # Load configuration to determine which frontend to serve
+    config = load_config()
+    collection_type = config.get("frontend_config", {}).get("collection_type", "photographs")
+    
+    # Set the frontend directory based on the configured collection type
+    frontend_dir = Path(__file__).parent.parent / "frontend" / collection_type / "build"
+    
+    if not frontend_dir.exists():
+        logger.warning(f"Frontend build directory not found: {frontend_dir}")
+        logger.warning("Please build the frontend before starting the server.")
 
 @app.get("/")
 async def root():
@@ -58,12 +71,11 @@ async def get_collections():
 @app.post("/api/search/text")
 async def text_search(
     query: str,
-    collection_ids: Optional[List[str]] = Query(None),
     limit: int = Query(20, ge=1, le=100)
 ):
     """Search collections using text query"""
     try:
-        results = text_search_handler(query, model, processor, collection_ids, limit)
+        results = text_search_handler(query, model, processor, limit)
         return {"results": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -100,7 +112,10 @@ async def combined_search(
         raise HTTPException(status_code=500, detail=str(e))
 
 # Mount static files for the frontend
-app.mount("/", StaticFiles(directory="src/frontend/build", html=True), name="frontend")
+app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+
+# Add this line after creating the app
+app.include_router(config_router)
 
 if __name__ == "__main__":
     import uvicorn
