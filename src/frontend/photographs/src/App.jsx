@@ -105,7 +105,7 @@ function App() {
       width: 800, // Default width for lightbox
       height: 600, // Default height for lightbox
       caption: result.metadata.title || result.file_name || 'Untitled',
-      alt: result.metadata.title || 'Historical Photograph',
+      alt: result.metadata.title || '',
       originalData: result,
       customOverlay: (
         <div className="custom-overlay">

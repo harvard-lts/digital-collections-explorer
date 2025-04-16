@@ -23,8 +23,8 @@ class Settings(BaseSettings):
     embeddings_dir: str = "data/embeddings"
     
     # Frontend settings
-    frontend_dir: str = "src/frontend/photographs/dist"
-    collection_type: str = "photographs"
+    frontend_dir: str = "src/frontend/web-archives/dist"
+    collection_type: str = "web-archives"
 
 def load_config():
     """Load configuration from JSON file"""

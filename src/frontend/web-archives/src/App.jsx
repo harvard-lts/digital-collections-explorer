@@ -26,7 +26,7 @@ const SearchResults = React.memo(({
     return (
       <div className="loading-indicator">
         <div className="spinner"></div>
-        <p>Searching historical maps...</p>
+        <p>Searching web archives...</p>
       </div>
     );
   }
@@ -72,14 +72,14 @@ const SearchResults = React.memo(({
   if (hasSearched) {
     return (
       <div className="no-results">
-        <p>No maps found. Try a different search query.</p>
+        <p>No web archives found. Try a different search query.</p>
       </div>
     );
   }
 
   return (
     <div className="welcome-message">
-      <p>Enter a search term to explore historical maps.</p>
+      <p>Enter a search term to explore web archives.</p>
       <p>Try searching for subjects, time periods, locations, or visual elements.</p>
     </div>
   );
@@ -105,7 +105,7 @@ function App() {
       width: 800, // Default width for lightbox
       height: 600, // Default height for lightbox
       caption: result.metadata.title || result.file_name || 'Untitled',
-      alt: result.metadata.title ||
+      alt: result.metadata.title || '',
       originalData: result,
       customOverlay: (
         <div className="custom-overlay">
@@ -179,7 +179,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>My Digital Collections Explorer</h1>
-        <p>Explore historical maps using natural language search</p>
+        <p>Explore web archives using natural language search</p>
       </header>
       
       <main className="App-main">

@@ -49,8 +49,8 @@ npm run setup -- --type=photographs
 
 Available collection types:
 - `photographs`: For photo collections and image archives
-- `maps`: For map collections (coming soon)
-- `web-archives`: For web archive collections (coming soon)
+- `maps`: For map collections
+- `web-archives`: For web archive collections
 
 This will configure the project for your specific collection type and build the frontend.
 

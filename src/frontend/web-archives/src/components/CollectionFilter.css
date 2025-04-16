@@ -1,0 +1,71 @@
+.collection-filter {
+  background-color: #f0ebe1;
+  border-radius: 4px;
+  padding: 1rem;
+  border: 1px solid #d0b49f;
+}
+
+.collection-filter h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  color: #6b4226;
+  border-bottom: 1px solid #d0b49f;
+  padding-bottom: 0.5rem;
+}
+
+.collection-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.collection-action-button {
+  background-color: transparent;
+  border: 1px solid #d0b49f;
+  color: #6b4226;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.collection-action-button:hover {
+  background-color: #e8e2d6;
+}
+
+.collection-list {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.collection-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.collection-item input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+.collection-name {
+  flex: 1;
+  text-align: left;
+}
+
+.collection-count {
+  color: #777;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+  .collection-filter {
+    width: 100%;
+    margin-top: 1rem;
+  }
+}
