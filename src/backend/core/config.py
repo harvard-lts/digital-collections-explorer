@@ -25,7 +25,6 @@ class Settings(BaseSettings):
     # Frontend settings
     frontend_dir: str = "src/frontend/photographs/dist"
     collection_type: str = "photographs"
-    project_name: str = "Digital Collections Explorer"
 
 def load_config():
     """Load configuration from JSON file"""
@@ -58,9 +57,8 @@ def load_config():
         
         # Frontend settings
         frontend_config = config_data.get("frontend_config", {})
-        settings_dict["frontend_dir"] = frontend_config.get("frontend_dir", "src/frontend/photographs/dist")
+        settings_dict["frontend_dir"] = frontend_config.get("frontend_dir", f"src/frontend/{frontend_config.get('collection_type', 'photographs')}/dist")
         settings_dict["collection_type"] = frontend_config.get("collection_type", "photographs")
-        settings_dict["project_name"] = frontend_config.get("project_name", "Digital Collections Explorer")
         
         return Settings(**settings_dict)
     

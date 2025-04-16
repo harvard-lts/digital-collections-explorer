@@ -178,7 +178,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Digital Collections Explorer</h1>
+        <h1>My Digital Collections Explorer</h1>
         <p>Explore historical photographs using natural language search</p>
       </header>
       

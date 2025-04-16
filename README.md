@@ -44,7 +44,7 @@ cd digital-collections-explorer
 
 ```bash
 npm install
-npm run setup -- --type=photographs --name="My Photo Explorer"
+npm run setup -- --type=photographs
 ```
 
 Available collection types:

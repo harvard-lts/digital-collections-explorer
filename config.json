@@ -16,6 +16,6 @@
   "frontend_config": {
     "port": 3000,
     "collection_type": "photographs",
-    "project_name": "My Photo Explorer"
+    "frontend_dir": "src/frontend/photographs/dist"
   }
 }

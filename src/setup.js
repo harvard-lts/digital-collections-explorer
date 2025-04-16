@@ -9,7 +9,6 @@ const { execSync } = require('child_process');
 const args = process.argv.slice(2);
 const helpArg = args.includes('--help') || args.includes('-h');
 const typeArg = args.find(arg => arg.startsWith('--type='));
-const nameArg = args.find(arg => arg.startsWith('--name='));
 
 // Available collection types
 const COLLECTION_TYPES = ['photographs', 'maps', 'web-archives'];
@@ -18,11 +17,10 @@ const COLLECTION_TYPES = ['photographs', 'maps', 'web-archives'];
 if (helpArg || !typeArg) {
   console.log(chalk.blue('Digital Collections Explorer - Setup'));
   console.log(chalk.gray('Configure your collection explorer instance\n'));
-  console.log('Usage: npm run setup -- --type=<collection-type> [--name="Project Name"] [options]');
+  console.log('Usage: npm run setup -- --type=<collection-type> [options]');
   console.log('\nOptions:');
   console.log('  --type=<collection-type>  Specify the collection type (required)');
   console.log('                           Available types: photographs, maps, web-archives');
-  console.log('  --name="Project Name"    Specify the project name (optional)');
   console.log('  --help, -h               Show this help message');
   process.exit(helpArg ? 0 : 1);
 }
@@ -37,31 +35,26 @@ if (!COLLECTION_TYPES.includes(collectionType)) {
   process.exit(1);
 }
 
-// Extract project name from argument or use default
-const projectName = nameArg 
-  ? nameArg.split('=')[1].replace(/^"|"$/g, '') // Remove quotes if present
-  : 'Digital Collections Explorer';
-
 console.log(chalk.blue('Digital Collections Explorer - Setup'));
-console.log(chalk.gray(`Configuring for collection type: ${chalk.cyan(collectionType)}`));
-console.log(chalk.gray(`Project name: ${chalk.cyan(projectName)}\n`));
+console.log(chalk.gray(`Configuring for collection type: ${chalk.cyan(collectionType)}\n`));
 
 // Update configuration with selected options
-updateConfig(collectionType, projectName);
+updateConfig(collectionType);
 
 // Install frontend dependencies and build
 installAndBuildFrontend(collectionType);
 
-// Display next steps
-displayNextSteps(collectionType);
+console.log(chalk.green('\n✓ Setup completed successfully!'));
+console.log(chalk.yellow('\n Go check README.md for the next step.'));
 
 // Function to update the configuration file with user selections
-function updateConfig(collectionType, projectName) {
+function updateConfig(collectionType) {
   console.log(chalk.gray('Updating configuration...'));
   
   try {
     // Update config.json with frontend configuration
     const configPath = path.resolve(process.cwd(), 'config.json');
+    const backendConfigPath = path.resolve(process.cwd(), 'src', 'backend', 'core', 'config.py');
     
     if (!fs.existsSync(configPath)) {
       console.error(chalk.red(`Error: Configuration file not found: ${configPath}`));
@@ -69,18 +62,39 @@ function updateConfig(collectionType, projectName) {
       process.exit(1);
     }
     
+    // Update config.json
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     
     // Update frontend configuration
     config.frontend_config = {
       ...config.frontend_config,
       collection_type: collectionType,
-      project_name: projectName
+      frontend_dir: `src/frontend/${collectionType}/dist`
     };
     
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    console.log(chalk.green('✓ config.json updated'));
     
-    console.log(chalk.green('✓ Configuration updated'));
+    // Update backend config.py
+    if (fs.existsSync(backendConfigPath)) {
+      let configPy = fs.readFileSync(backendConfigPath, 'utf8');
+      
+      // Update the default frontend settings
+      configPy = configPy.replace(
+        /frontend_dir: str = ".*?"/,
+        `frontend_dir: str = "src/frontend/${collectionType}/dist"`
+      );
+      configPy = configPy.replace(
+        /collection_type: str = ".*?"/,
+        `collection_type: str = "${collectionType}"`
+      );
+      
+      fs.writeFileSync(backendConfigPath, configPy);
+      console.log(chalk.green('✓ Backend config.py updated'));
+    } else {
+      console.warn(chalk.yellow('Warning: Backend config.py not found, skipping backend configuration update'));
+    }
+    
   } catch (error) {
     console.error(chalk.red(`Error updating configuration: ${error.message}`));
     process.exit(1);
@@ -122,13 +136,3 @@ function installAndBuildFrontend(collectionType) {
   // Return to the project root
   process.chdir(process.cwd());
 }
-
-// Function to display next steps
-function displayNextSteps(collectionType) {
-  console.log(chalk.green('\n✓ Setup completed successfully!'));
-  console.log(chalk.yellow('\nNext steps:'));
-  
-  console.log('1. Add your images to ' + chalk.cyan('data/raw/'));
-  console.log('2. Run ' + chalk.cyan('python -m src.models.clip.generate_embeddings'));
-  console.log('3. Start the server with ' + chalk.cyan('python -m src.backend.main'));
-} 
