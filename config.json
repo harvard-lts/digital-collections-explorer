@@ -15,7 +15,7 @@
   },
   "frontend_config": {
     "port": 3000,
-    "collection_type": "web-archives",
-    "frontend_dir": "src/frontend/web-archives/dist"
+    "collection_type": "photographs",
+    "frontend_dir": "src/frontend/photographs/dist"
   }
 }
