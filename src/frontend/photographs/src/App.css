@@ -43,14 +43,14 @@ input {
 button {
   font-family: 'Lato', sans-serif;
   padding: 8px 16px;
-  background-color: #61dafb;
+  background-color: #8b5a2b;
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
 button:hover {
-  background-color: #21a1cb;
+  background-color: #8b5a2b;
 }
 
 .search-button {
@@ -245,7 +245,7 @@ button:hover {
   padding: 10px 15px;
   border-radius: 4px;
   background-color: #1e1e1e;
-  color: #f8f5f0;
+  color: #eee;
   margin: 10px 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   max-width: 250px;
