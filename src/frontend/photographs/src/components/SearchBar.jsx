@@ -1,10 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SearchBar.css';
+import { getEmbeddingStats } from '../services/api';
 
 function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef, onImageSearch }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [searchMode, setSearchMode] = useState('text'); // 'text' or 'image'
+  const [embeddingCount, setEmbeddingCount] = useState(null);
+
+  useEffect(() => {
+    // Fetch embedding statistics when component mounts
+    const fetchEmbeddingStats = async () => {
+      try {
+        const stats = await getEmbeddingStats();
+        setEmbeddingCount(stats.count);
+      } catch (error) {
+        console.error('Failed to load embedding stats:', error);
+      }
+    };
+
+    fetchEmbeddingStats();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -124,7 +140,14 @@ function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef, onImageSea
 
       {searchMode === 'text' && (
         <div className="search-suggestions">
-          <p>Try: "city streets" • "rural landscapes" • "women in uniform" • "symbol of capitalization"</p>
+          <p>
+            Try searching for: "city streets", "rural landscapes", "women in uniform", or "symbol of capitalization"
+          </p>
+          {embeddingCount !== null && (
+            <p className="embedding-count">
+              to discover matches from our collection of {embeddingCount.toLocaleString()} historical photographs
+            </p>
+          )}
         </div>
       )}
     </div>

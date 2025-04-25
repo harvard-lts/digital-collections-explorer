@@ -271,7 +271,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>My Digital Collections Explorer</h1>
+        <h1>San Francisco Chronicle Explorer</h1>
         <p>Explore historical photographs using natural language search</p>
       </header>
       
@@ -284,13 +284,14 @@ function App() {
             onImageSearch={handleImageSearch}
             inputRef={searchInputRef}
           />
-          <ResultsPerPageDropdown 
-            resultsPerPage={resultsPerPage} 
-            setResultsPerPage={setResultsPerPage} 
-            setCurrentPage={setCurrentPage} 
-            isLoading={isLoading} 
-          />
         </div>
+
+        <ResultsPerPageDropdown 
+          resultsPerPage={resultsPerPage} 
+          setResultsPerPage={setResultsPerPage} 
+          setCurrentPage={setCurrentPage} 
+          isLoading={isLoading} 
+        />
 
         <SearchResults 
           photos={photos}

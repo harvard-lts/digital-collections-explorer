@@ -1,280 +1,209 @@
 .search-bar {
   width: 100%;
-  margin-bottom: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 15px;
 }
 
 .search-bar form {
   display: flex;
-  width: 100%;
+  gap: 10px;
 }
 
 .search-input {
-  flex-grow: 1;
-  padding: 12px 16px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px 0 0 4px;
-  outline: none;
+  flex: 1;
+  padding: 12px 15px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+  background-color: #2c2c2c;
+  color: #f8f5f0;
+}
+
+.search-input::placeholder {
+  color: #999;
 }
 
 .search-input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  border-color: #6b4226;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(107, 66, 38, 0.3);
 }
 
 .search-bar .search-button {
-  padding: 12px 20px;
-  background-color: #007bff;
+  background-color: #8b5a2b;
   color: white;
   border: none;
-  border-radius: 0 4px 4px 0;
-  font-size: 16px;
+  border-radius: 4px;
+  padding: 0 20px;
+  font-size: 1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
   transition: background-color 0.2s;
 }
 
 .search-bar .search-button:hover {
-  background-color: #0056b3;
+  background-color: #6b4226;
 }
 
 .search-bar .search-button:disabled {
-  background-color: #ccc;
+  background-color: #444;
+  color: #999;
   cursor: not-allowed;
 }
 
 .search-icon {
-  margin-right: 8px;
+  font-size: 1.2rem;
 }
 
 .search-suggestions {
-  margin-top: 8px;
-  font-size: 14px;
-  color: #666;
-  text-align: left;
+  margin-top: 12px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #b0b0b0;
 }
 
-/* 圖片搜尋相關樣式 */
 .search-mode-selector {
   display: flex;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #333;
 }
 
 .mode-button {
-  padding: 8px 16px;
-  border: 1px solid #ccc;
-  background-color: #f8f9fa;
+  background: none;
+  border: none;
+  padding: 10px 20px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.95rem;
+  color: #b0b0b0;
+  position: relative;
+  transition: color 0.2s;
 }
 
-.mode-button:first-child {
-  border-radius: 4px 0 0 4px;
-}
-
-.mode-button:last-child {
-  border-radius: 0 4px 4px 0;
+.mode-button:hover {
+  color: #d0b49f;
+  background-color: transparent;
 }
 
 .mode-button.active {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
+  color: #d0b49f;
+  font-weight: 500;
+}
+
+.mode-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #8b5a2b;
+  border-radius: 3px 3px 0 0;
 }
 
 .image-search-container {
+  flex: 1;
   display: flex;
-  flex-grow: 1;
-  width: 100%;
-  flex-direction: column;
-  gap: 15px;
+  gap: 10px;
 }
 
 .image-upload {
-  flex-grow: 1;
+  flex: 1;
   position: relative;
-  border: 2px dashed #ccc;
-  border-radius: 5px;
-  padding: 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  background-color: #f9f9f9;
+  border: 2px dashed #444;
+  border-radius: 4px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.3s;
+  background-color: #2c2c2c;
 }
 
 .image-upload:hover {
-  border-color: #007bff;
+  border-color: #8b5a2b;
 }
 
 .image-input {
   position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   opacity: 0;
   cursor: pointer;
-  display: none;
+  top: 0;
+  left: 0;
 }
 
 .image-upload-label {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  gap: 10px;
+  color: #b0b0b0;
+  font-size: 0.9rem;
+  padding: 10px;
+  text-align: center;
 }
 
 .upload-icon {
-  font-size: 24px;
-  margin-bottom: 8px;
+  font-size: 1.5rem;
+  margin-bottom: 5px;
 }
 
 .image-preview-container {
+  flex: 1;
   position: relative;
-  flex-grow: 1;
-  margin-right: 10px;
   border-radius: 4px;
   overflow: hidden;
-  width: 200px;
-  height: 150px;
-  margin: 0 auto;
+  border: 1px solid #444;
+  background-color: #2c2c2c;
 }
 
 .image-preview {
   width: 100%;
-  max-height: 200px;
-  object-fit: cover;
-  display: block;
   height: 100%;
   object-fit: contain;
-  border-radius: 5px;
+  max-height: 100px;
 }
 
 .clear-image-button {
   position: absolute;
   top: 5px;
   right: 5px;
-  width: 30px;
-  height: 30px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #ddd;
+  border: 1px solid #444;
   border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.5);
-  color: white;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  top: -10px;
-  right: -10px;
-  background-color: rgba(0, 0, 0, 0.7);
   width: 24px;
   height: 24px;
-}
-
-/* 分頁按鈕樣式 */
-.pagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 20px 0;
-  gap: 15px;
-}
-
-.pagination-button {
-  padding: 8px 16px;
-  margin: 0 5px;
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
+  font-size: 0.8rem;
+  transition: background-color 0.2s;
 }
 
-.pagination-button:hover {
-  background-color: #e0e0e0;
-  background-color: #3a7bc8;
+.clear-image-button:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
 }
 
-.pagination-button:disabled {
-  background-color: #f9f9f9;
-  color: #aaa;
-  cursor: not-allowed;
-  background-color: #cccccc;
-}
-
-/* Results per page dropdown styles */
-.results-per-page {
-  display: flex;
-  align-items: center;
-  margin-left: 15px;
-}
-
-.results-per-page label {
-  margin-right: 8px;
-  font-size: 14px;
-  color: #555;
-}
-
-.results-dropdown {
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  background-color: white;
-  cursor: pointer;
-}
-
-.results-dropdown:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-}
-
-.results-dropdown:disabled {
-  background-color: #f1f1f1;
-  cursor: not-allowed;
+.embedding-count {
+  margin-top: 8px;
 }
 
 @media (max-width: 600px) {
-  .pagination {
+  .search-bar form {
     flex-direction: column;
-    gap: 10px;
   }
   
-  .results-per-page {
-    margin-left: 0;
-    margin-top: 10px;
-  }
-}
-
-@media (max-width: 768px) {
-  .search-text {
-    display: none;
-  }
-  
-  .search-icon {
-    margin: 0;
-  }
-}
-
-/* Responsive adjustments */
-@media (min-width: 768px) {
-  .search-controls {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-  
-  .search-bar {
-    flex: 2;
-  }
-  
-  .collection-filter {
-    flex: 1;
+  .search-bar .search-button {
+    width: 100%;
+    padding: 12px;
   }
 }
