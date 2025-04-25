@@ -1,0 +1,120 @@
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+.ReactGridGallery_tile {
+  cursor: pointer;
+  transition: transform 0.2s;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.ReactGridGallery_tile:hover {
+  transform: scale(1.02);
+  z-index: 1;
+}
+
+.ReactGridGallery_tile-viewport {
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: none !important;
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.welcome-message p {
+  margin: 0.5rem 0;
+}
+
+.welcome-message {
+  text-align: center;
+  padding: 3rem 0;
+  font-style: italic;
+  color: #b0b0b0;
+}
+
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #6b4226;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+
+/* Custom overlay styling */
+.custom-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(30, 30, 30, 0.8);
+  color: #f8f5f0;
+  padding: 0.5rem;
+  text-align: left;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 3;
+}
+
+.ReactGridGallery_tile:hover .custom-overlay {
+  opacity: 1;
+}
+
+.custom-overlay-title {
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-overlay-similarity {
+  font-size: 0.8rem;
+  color: #d0b49f;
+}
+
+.custom-overlay-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.custom-overlay-tag {
+  font-size: 0.7rem;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 0.1rem 0.3rem;
+  border-radius: 2px;
+}
+
+
+/* Lightbox customization */
+.yarl__container {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.yarl__slide_description {
+  background-color: rgba(0, 0, 0, 0.7);
+  max-height: 40%;
+  overflow-y: auto;
+}
+
+/* Make the gallery container take full width */
+.gallery-container > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
