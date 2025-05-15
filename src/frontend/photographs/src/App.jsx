@@ -161,8 +161,8 @@ function App() {
   // Format search results into the format expected by react-grid-gallery
   const formatPhotosForGallery = (results) => {
     return results.map(result => ({
-      src: `/api/images/${result.file_path}?size=full`,
-      thumbnail: `/api/images/${result.file_path}?size=thumbnail`,
+      src: `/images/${result.file_path}?size=full`,
+      thumbnail: `/images/${result.file_path}?size=thumbnail`,
       thumbnailWidth: 320, // Default width if not available
       thumbnailHeight: 212, // Default height with 3:2 aspect ratio
       width: 800, // Default width for lightbox
@@ -271,7 +271,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>SF Chronicle Photos Explorer</h1>
+        <h1>Digital Collection Explorer</h1>
         <p>Explore historical photographs using natural language search</p>
       </header>
       

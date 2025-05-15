@@ -1,26 +1,14 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { Gallery } from "react-grid-gallery";
-import Lightbox from "yet-another-react-lightbox";
-import "yet-another-react-lightbox/styles.css";
-import { LazyLoadImage } from 'react-lazy-load-image-component';
-import 'react-lazy-load-image-component/src/effects/blur.css';
+import React, { useState, useRef } from 'react';
+import { searchContent } from './services/api';
 import SearchBar from './components/SearchBar';
-import PhotoInfo from './components/PhotoInfo';
+import PDFResultsGrid from './components/PDFResultsGrid';
 import './App.css';
-import { searchPhotos } from './services/api';
 
-// Create a new SearchResults component at the top of your file, before the App component
 const SearchResults = React.memo(({ 
-  photos, 
+  items, 
   isLoading, 
   hasSearched, 
-  error, 
-  openLightbox, 
-  viewerIsOpen, 
-  currentImage, 
-  closeLightbox, 
-  lightboxSlides, 
-  thumbnailImageComponent 
+  error 
 }) => {
   if (isLoading) {
     return (
@@ -39,32 +27,10 @@ const SearchResults = React.memo(({
     );
   }
 
-  if (photos.length > 0) {
+  if (items.length > 0) {
     return (
-      <div className="gallery-container">
-        <Gallery 
-          images={photos}
-          enableImageSelection={false}
-          thumbnailImageComponent={thumbnailImageComponent}
-          onClick={(index) => openLightbox(index)}
-          margin={2}
-          rowHeight={180}
-          targetRowHeight={200}
-          containerWidth={window.innerWidth * 0.95}
-        />
-        {viewerIsOpen && (
-          <Lightbox
-            slides={lightboxSlides}
-            open={viewerIsOpen}
-            index={currentImage}
-            close={closeLightbox}
-            controller={{ closeOnBackdropClick: true }}
-            render={{
-              buttonPrev: photos.length <= 1 ? () => null : undefined,
-              buttonNext: photos.length <= 1 ? () => null : undefined,
-            }}
-          />
-        )}
+      <div className="results-container">
+        <PDFResultsGrid items={items} />
       </div>
     );
   }
@@ -86,39 +52,12 @@ const SearchResults = React.memo(({
 });
 
 function App() {
-  const [photos, setPhotos] = useState([]);
+  const [items, setItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentImage, setCurrentImage] = useState(0);
-  const [viewerIsOpen, setViewerIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState(null);
   const searchInputRef = useRef(null);
-
-  // Format search results into the format expected by react-grid-gallery
-  const formatPhotosForGallery = (results) => {
-    return results.map(result => ({
-      src: `/api/images/${result.file_path}?size=full`,
-      thumbnail: `/api/images/${result.file_path}?size=thumbnail`,
-      thumbnailWidth: 320, // Default width if not available
-      thumbnailHeight: 212, // Default height with 3:2 aspect ratio
-      width: 800, // Default width for lightbox
-      height: 600, // Default height for lightbox
-      caption: result.metadata.title || result.file_name || 'Untitled',
-      alt: result.metadata.title || '',
-      originalData: result,
-      customOverlay: (
-        <div className="custom-overlay">
-          <div className="custom-overlay-title">
-            {result.metadata.title || result.file_name || 'Untitled'}
-          </div>
-          <div className="custom-overlay-similarity">
-            Similarity score: {result.similarity.toFixed(3)}
-          </div>
-        </div>
-      )
-    }));
-  };
 
   const handleSearch = async (query) => {
     if (!query.trim()) {
@@ -130,8 +69,8 @@ function App() {
     setError(null);
     
     try {
-      const results = await searchPhotos(query);
-      setPhotos(formatPhotosForGallery(results));
+      const results = await searchContent(query);
+      setItems(results);
       setHasSearched(true);
     } catch (error) {
       console.error('Error performing search:', error);
@@ -141,44 +80,10 @@ function App() {
     }
   };
 
-  const openLightbox = useCallback((index) => {
-    setCurrentImage(index);
-    setViewerIsOpen(true);
-  }, []);
-
-  const closeLightbox = () => {
-    setCurrentImage(0);
-    setViewerIsOpen(false);
-  };
-
-  // Custom thumbnail image component for Gallery
-  const thumbnailImageComponent = useCallback(({ item, imageProps }) => (
-    <LazyLoadImage
-      alt={imageProps.alt}
-      effect="blur"
-      src={item.thumbnail}
-      height={item.thumbnailHeight}
-      width={item.thumbnailWidth}
-      style={{ objectFit: 'cover' }}
-      className="historical-image"
-      placeholderSrc='https://placehold.co/300x200'
-    />
-  ), []);
-
-  // Format photos for the Lightbox component
-  const lightboxSlides = useMemo(() => photos.map(photo => ({
-    src: photo.src,
-    alt: photo.alt,
-    title: photo.caption,
-    description: photo.originalData ? (
-      <PhotoInfo photo={photo.originalData} />
-    ) : null
-  })), [photos]);
-
   return (
     <div className="App">
       <header className="App-header">
-        <h1>My Digital Collections Explorer</h1>
+        <h1>Web Archives Explorer</h1>
         <p>Explore web archives using natural language search</p>
       </header>
       
@@ -193,16 +98,10 @@ function App() {
         </div>
 
         <SearchResults 
-          photos={photos}
+          items={items}
           isLoading={isLoading}
           hasSearched={hasSearched}
           error={error}
-          openLightbox={openLightbox}
-          viewerIsOpen={viewerIsOpen}
-          currentImage={currentImage}
-          closeLightbox={closeLightbox}
-          lightboxSlides={lightboxSlides}
-          thumbnailImageComponent={thumbnailImageComponent}
         />
       </main>
     </div>
