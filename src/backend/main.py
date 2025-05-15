@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import logging
-from pathlib import Path
 import uvicorn
+from pathlib import Path
 from contextlib import asynccontextmanager
 
 from .core.config import settings
@@ -42,7 +42,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API routers
 app.include_router(search.router)
 app.include_router(images.router)
 app.include_router(search.embeddings_router)
@@ -61,9 +60,6 @@ else:
     logger.warning("The API will run without serving the frontend.")
 
 if __name__ == "__main__":
-    import uvicorn
-    
-    # Run the server
     uvicorn.run(
         "src.backend.main:app",
         host=settings.host,

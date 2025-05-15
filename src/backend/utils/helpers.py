@@ -14,7 +14,7 @@ def load_config(config_path=None):
     
     # Convert relative paths to absolute paths
     root_dir = Path(os.path.dirname(os.path.abspath(config_path)))
-    for key in ["data_dir", "raw_data_dir", "processed_data_dir", "embeddings_dir"]:
+    for key in ["raw_data_dir", "processed_data_dir", "embeddings_dir", "thumbnails_dir"]:
         if key in config:
             config[key] = str(root_dir / config[key])
     

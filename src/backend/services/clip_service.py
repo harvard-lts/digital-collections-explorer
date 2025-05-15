@@ -25,7 +25,7 @@ class CLIPService:
         try:
             self.model = CLIPModel.from_pretrained(self.model_name).to(self.device)
             self.processor = CLIPProcessor.from_pretrained(self.model_name)
-            self.model.eval()  # Set to evaluation mode
+            self.model.eval()
             logger.info(f"CLIP model loaded successfully")
         except Exception as e:
             logger.error(f"Error loading CLIP model: {str(e)}")
@@ -69,5 +69,4 @@ class CLIPService:
         combined = combined / combined.norm(dim=-1, keepdim=True)
         return combined
 
-# Create a singleton instance
 clip_service = CLIPService()
