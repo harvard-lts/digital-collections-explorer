@@ -27,6 +27,14 @@ export default defineConfig({
       '/api': {
         target: `http://${apiHost}:${apiPort}`,
         changeOrigin: true,
+      },
+      '/images': {
+        target: `http://${apiHost}:${apiPort}`,
+        changeOrigin: true,
+      },
+      '/static': {
+        target: `http://${apiHost}:${apiPort}`,
+        changeOrigin: true,
       }
     }
   },
