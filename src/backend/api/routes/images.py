@@ -1,56 +1,67 @@
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 from pathlib import Path
-from PIL import Image
-import os
+from src.backend.services.embedding_service import embedding_service
 
-from src.backend.core.config import settings
+router = APIRouter(tags=["images"])
 
-router = APIRouter(prefix="/api/images", tags=["images"])
-
-THUMBNAIL_DIR = Path(settings.data_dir) / "thumbnails"
-
-@router.get("/{file_path:path}")
-async def get_image(
-    file_path: str, 
+@router.get("/images/{id}")
+async def get_image_by_id(
+    id: str,
     size: str = Query("full", description="Image size: 'thumbnail' or 'full'")
 ):
     """
-    Serve an image from the raw data directory
+    Serve an image based on its ID
     
     Args:
-        file_path: Path to the image file
-        size: Size of the image to return ('thumbnail' or 'full')
+        id: The document ID
+        size: Size of the image to return
     """
-    original_path = Path(settings.raw_data_dir) / file_path
+    doc = embedding_service.get_document_by_id(id)
     
-    if not original_path.exists():
-        raise HTTPException(status_code=404, detail="Image not found")
+    if not doc:
+        raise HTTPException(status_code=404, detail=f"Document with ID {id} not found")
     
-    # If full size is requested, return the original image
-    if size == "full":
-        return FileResponse(original_path)
+    if size == "thumbnail" and "metadata" in doc and "paths" in doc["metadata"] and "thumbnail" in doc["metadata"]["paths"]:
+        path_str = doc["metadata"]["paths"]["thumbnail"]
+    elif "metadata" in doc and "paths" in doc["metadata"] and "processed" in doc["metadata"]["paths"]:
+        path_str = doc["metadata"]["paths"]["processed"]
+    else:
+        raise HTTPException(status_code=404, detail="Image path not found in document metadata")
     
-    # For thumbnails, check if we have a cached version
-    thumbnail_path = THUMBNAIL_DIR / file_path
-    os.makedirs(thumbnail_path.parent, exist_ok=True)
+    path = Path(path_str)
     
-    # If thumbnail doesn't exist, create it
-    if not thumbnail_path.exists():
-        try:
-            # Open the original image
-            with Image.open(original_path) as img:
-                # Calculate new dimensions (max 320px width)
-                max_width = 320
-                width, height = img.size
-                new_height = int(height * (max_width / width))
-                
-                # Resize the image
-                img_thumbnail = img.resize((max_width, new_height), Image.LANCZOS)
-                
-                # Save the thumbnail
-                img_thumbnail.save(thumbnail_path, format=img.format or "JPEG", quality=85)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error creating thumbnail: {str(e)}")
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Image not found at path: {path}")
     
-    return FileResponse(thumbnail_path)
+    return FileResponse(path)
+
+@router.get("/static/{id}")
+async def get_original_document(id: str):
+    """
+    Serve the original document file
+    
+    Args:
+        id: The document ID
+    """
+    doc = embedding_service.get_document_by_id(id)
+
+    if not doc:
+        raise HTTPException(status_code=404, detail=f"Document with ID {id} not found")
+    
+    if "metadata" in doc and "paths" in doc["metadata"] and "original" in doc["metadata"]["paths"]:
+        path_str = doc["metadata"]["paths"]["original"]
+    else:
+        raise HTTPException(status_code=404, detail="Original file path not found in document metadata")
+    
+    path = Path(path_str)
+    
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Original file not found at path: {path}")
+    
+    filename = path.name
+    return FileResponse(
+        path, 
+        filename=filename,
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

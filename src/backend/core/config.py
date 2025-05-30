@@ -17,10 +17,10 @@ class Settings(BaseSettings):
     batch_size: int = 32
     
     # Data directories
-    data_dir: str = "data"
     raw_data_dir: str = "data/raw"
     processed_data_dir: str = "data/processed"
     embeddings_dir: str = "data/embeddings"
+    thumbnails_dir: str = "data/thumbnails"
     
     # Frontend settings
     frontend_dir: str = "src/frontend/photographs/dist"
@@ -50,10 +50,10 @@ def load_config():
         settings_dict["batch_size"] = model_config.get("batch_size", 32)
         
         # Data directories
-        settings_dict["data_dir"] = config_data.get("data_dir", "data")
         settings_dict["raw_data_dir"] = config_data.get("raw_data_dir", "data/raw")
         settings_dict["processed_data_dir"] = config_data.get("processed_data_dir", "data/processed")
         settings_dict["embeddings_dir"] = config_data.get("embeddings_dir", "data/embeddings")
+        settings_dict["thumbnails_dir"] = config_data.get("thumbnails_dir", "data/thumbnails")
         
         # Frontend settings
         frontend_config = config_data.get("frontend_config", {})

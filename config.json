@@ -1,8 +1,8 @@
 {
-  "data_dir": "data",
   "raw_data_dir": "data/raw",
   "processed_data_dir": "data/processed",
   "embeddings_dir": "data/embeddings",
+  "thumbnails_dir": "data/thumbnails",
   "model_config": {
     "clip_model": "openai/clip-vit-base-patch32",
     "batch_size": 32,
