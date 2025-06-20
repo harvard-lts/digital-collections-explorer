@@ -7,7 +7,7 @@ import logging
 from pdf2image import convert_from_path
 from PIL import Image
 from dataclasses import dataclass
-from typing import Dict, Tuple, Any
+from typing import Dict, Any, List
 import PyPDF2
 
 from transformers import CLIPProcessor, CLIPModel
@@ -19,14 +19,9 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProcessingResult:
     """Class for storing processing results"""
-    embeddings: Dict[str, np.ndarray]
+    embeddings: Dict[str, torch.Tensor]
     metadata: Dict[str, Dict[str, Any]]
     skipped_files: int
-
-def create_thumbnail(image: Image.Image, size: Tuple[int, int] = (400, 400)) -> Image.Image:
-    """Create a thumbnail from an image"""
-    image.thumbnail(size, Image.Resampling.LANCZOS)
-    return image
 
 def resize_image_proportionally(image: Image.Image, max_size: int = 1920) -> Image.Image:
     """Resize an image proportionally if it exceeds the maximum size"""
@@ -51,7 +46,7 @@ def generate_embeddings(model, processor, images, device="cuda"):
             embeddings = model.get_image_features(**inputs)
             embeddings = embeddings / embeddings.norm(dim=-1, keepdim=True)
         
-        return embeddings.cpu().numpy()
+        return embeddings.cpu()
     except Exception as e:
         logger.error(f"Error generating embeddings: {e}")
         return None
@@ -274,17 +269,17 @@ def main():
     result = process_files(model, processor, DEVICE, RAW_DATA_DIR, PROCESSED_DIR, THUMBNAILS_DIR)
     
     # Save embeddings and metadata
-    embeddings_file = EMBEDDINGS_DIR / "embeddings.npy"
-    item_ids_file = EMBEDDINGS_DIR / "item_ids.npy"
+    embeddings_file = EMBEDDINGS_DIR / "embeddings.pt"
+    item_ids_file = EMBEDDINGS_DIR / "item_ids.pt"
     metadata_file = EMBEDDINGS_DIR / "metadata.json"
     
     # Get item IDs and embeddings as arrays
-    item_ids = np.array(list(result.embeddings.keys()))
-    embeddings_array = np.array(list(result.embeddings.values()))
+    item_ids = list(result.embeddings.keys())
+    embeddings_tensor = torch.stack(list(result.embeddings.values()))
     
     # Save to files
-    np.save(embeddings_file, embeddings_array)
-    np.save(item_ids_file, item_ids)
+    torch.save(embeddings_tensor, embeddings_file)
+    torch.save(item_ids, item_ids_file)
     with open(metadata_file, "w") as f:
         json.dump(result.metadata, f, indent=2)
     

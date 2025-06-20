@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 
 from .core.config import settings
 from .services.embedding_service import embedding_service
-from .api.routes import search, images
+from .api.routes import search, images, embeddings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,7 +44,7 @@ app.add_middleware(
 
 app.include_router(search.router)
 app.include_router(images.router)
-app.include_router(search.embeddings_router)
+app.include_router(embeddings.router)
 
 @app.get("/api/health")
 async def health_check():

@@ -3,11 +3,8 @@ import json
 from pathlib import Path
 import logging
 import traceback
-import numpy as np
-from typing import List, Dict, Any, Union, Optional
-from PIL import Image
-from io import BytesIO
-from ..services.clip_service import clip_service
+from typing import List, Dict, Any, Optional
+
 from ..core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -20,7 +17,6 @@ class EmbeddingService:
         self.embeddings = None
         self.item_ids = None
         self.metadata = None
-        self.normalized_embeddings = None
         self.is_loaded = False
         
     def load_embeddings(self) -> None:
@@ -30,27 +26,28 @@ class EmbeddingService:
             return
             
         try:
-            embeddings_path = self.embeddings_dir / "embeddings.npy"
-            item_ids_path = self.embeddings_dir / "item_ids.npy"
+            embeddings_path = self.embeddings_dir / "embeddings.pt"
+            item_ids_path = self.embeddings_dir / "item_ids.pt"
             metadata_path = self.embeddings_dir / "metadata.json"
             
             logger.info(f"Looking for embeddings at {embeddings_path}")
             logger.info(f"Looking for item IDs at {item_ids_path}")
             logger.info(f"Looking for metadata at {metadata_path}")
             
-            if embeddings_path.exists() and item_ids_path.exists() and metadata_path.exists():
-                self.embeddings = np.load(embeddings_path)
-                self.item_ids = np.load(item_ids_path, allow_pickle=True)
+            if embeddings_path.exists() and item_ids_path.exists():
+                self.embeddings = torch.load(embeddings_path, map_location='cpu')
+                self.item_ids = torch.load(item_ids_path)
                 
-                with open(metadata_path, 'r') as f:
-                    self.metadata = json.load(f)
+                if metadata_path.exists():
+                    with open(metadata_path, 'r') as f:
+                        self.metadata = json.load(f)
+                else:
+                    self.metadata = {}
+                    logger.warning("Metadata file not found, proceeding without metadata.")
                 
                 logger.info(f"Loaded embeddings array with shape: {self.embeddings.shape}")
                 logger.info(f"Loaded {len(self.item_ids)} item IDs")
                 logger.info(f"Loaded metadata for {len(self.metadata)} items")
-                
-                self.normalized_embeddings = torch.from_numpy(self.embeddings).float()
-                self.normalized_embeddings = self.normalized_embeddings / self.normalized_embeddings.norm(dim=1, keepdim=True)
                 
                 # Verify that counts match
                 if len(self.item_ids) != self.embeddings.shape[0]:
@@ -63,8 +60,6 @@ class EmbeddingService:
                     logger.warning(f"Embeddings file not found at {embeddings_path}")
                 if not item_ids_path.exists():
                     logger.warning(f"Item IDs file not found at {item_ids_path}")
-                if not metadata_path.exists():
-                    logger.warning(f"Metadata file not found at {metadata_path}")
                     
                 logger.error("Failed to load embeddings: files not found")
         except Exception as e:
@@ -78,15 +73,7 @@ class EmbeddingService:
         return len(self.item_ids) if self.item_ids is not None else 0
     
     def get_document_by_id(self, doc_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Get a document by its ID
-        
-        Args:
-            doc_id: The document ID to find
-            
-        Returns:
-            Document dictionary with metadata if found, None otherwise
-        """
+        """Get a document by its ID"""
         if not self.is_loaded:
             self.load_embeddings()
             
@@ -112,37 +99,15 @@ class EmbeddingService:
         
         return None
     
-    def search(self, query_embedding: Union[torch.Tensor, np.ndarray], limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
-        """
-        Search for similar items using query embedding with pagination
-        
-        Args:
-            query_embedding: The embedding vector to search with (PyTorch tensor or NumPy array)
-            limit: Maximum number of results to return
-            offset: Number of results to skip for pagination
-        
-        Returns:
-            List of search results with metadata and similarity scores
-        """
+    def search(self, query_embedding: torch.Tensor, logit_scale: Optional[float] = None, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
+        """Search for similar items using query embedding with pagination"""
         try:
-            if not self.is_loaded:
-                logger.info("Embeddings not loaded, loading now...")
-                self.load_embeddings()
-                
-            if self.normalized_embeddings is None or self.item_ids is None or self.metadata is None:
-                logger.warning("No embeddings loaded, cannot perform search")
-                return []
+            similarities = torch.matmul(self.embeddings, query_embedding.t()).squeeze()
+
+            if logit_scale is not None:
+                similarities = similarities * logit_scale
             
-            if isinstance(query_embedding, np.ndarray):
-                query_embedding = torch.from_numpy(query_embedding).float()
-            
-            if query_embedding.dim() == 1:
-                query_embedding = query_embedding.unsqueeze(0)
-            
-            similarities = torch.matmul(self.normalized_embeddings, query_embedding.t()).squeeze()
-            
-            total_needed = offset + limit
-            top_k = min(total_needed, len(similarities))
+            top_k = min(offset + limit, len(similarities))
             top_scores, top_indices = torch.topk(similarities, k=top_k)
 
             start_idx = min(offset, len(top_indices))
@@ -153,8 +118,8 @@ class EmbeddingService:
             
             results = []
             
-            for idx, score in zip(paginated_indices.cpu().numpy(), paginated_scores.cpu().numpy()):
-                idx_int = int(idx)  # Convert tensor/numpy value to int
+            for idx, score in zip(paginated_indices.tolist(), paginated_scores.tolist()):
+                idx_int = int(idx)
                 if idx_int >= len(self.item_ids):
                     logger.warning(f"Index {idx_int} out of range for item_ids of length {len(self.item_ids)}")
                     continue
@@ -176,22 +141,5 @@ class EmbeddingService:
             logger.error(f"Error in search: {str(e)}")
             logger.error(traceback.format_exc())
             return []
-
-    def process_image(self, image_file):
-        """Process an uploaded image and return its embedding."""
-        try:
-            position = image_file.tell()
-            image_data = image_file.read()
-
-            image_file.seek(position)
-
-            image = Image.open(BytesIO(image_data))
-            embedding = clip_service.encode_image(image)
-            normalized_embedding = embedding / embedding.norm(dim=-1, keepdim=True)
-            
-            return normalized_embedding
-        except Exception as e:
-            logger.error(f"Error processing image: {str(e)}")
-            raise
 
 embedding_service = EmbeddingService()

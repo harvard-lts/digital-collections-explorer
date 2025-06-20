@@ -1,6 +1,5 @@
 import torch
 from transformers import CLIPProcessor, CLIPModel
-from pathlib import Path
 import logging
 
 from ..core.config import settings
@@ -31,42 +30,25 @@ class CLIPService:
             logger.error(f"Error loading CLIP model: {str(e)}")
             raise
     
-    def encode_text(self, texts):
-        """
-        Encode text inputs using the CLIP model
-        
-        Args:
-            texts: List of text strings to encode
-            
-        Returns:
-            numpy.ndarray: Text embeddings
-        """
+    def encode_text(self, texts) -> torch.Tensor:
+        """Encode text to embedding"""
         text_inputs = self.processor(text=texts, return_tensors="pt", padding=True)
-        
-        if self.device != "cpu":
-            text_inputs = {k: v.to(self.device) for k, v in text_inputs.items()}
+        text_inputs = {k: v.to(self.device) for k, v in text_inputs.items()}
         
         with torch.no_grad():
             text_features = self.model.get_text_features(**text_inputs)
-            text_features = text_features / text_features.norm(dim=1, keepdim=True)
+            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
         
-        return text_features.cpu().numpy()
+        return text_features.cpu()
     
     def encode_image(self, image) -> torch.Tensor:
         """Encode image to embedding"""
+        image_inputs = self.processor(images=image, return_tensors="pt", padding=True)
+        image_inputs = {k: v.to(self.device) for k, v in image_inputs.items()}
+
         with torch.no_grad():
-            image_inputs = self.processor(images=image, return_tensors="pt", padding=True)
-            image_inputs = {k: v.to(self.device) for k, v in image_inputs.items()}
-            image_embeddings = self.model.get_image_features(**image_inputs)
-            image_embeddings = image_embeddings / image_embeddings.norm(dim=-1, keepdim=True)
-        return image_embeddings
-    
-    def combine_embeddings(self, text_embedding: torch.Tensor, image_embedding: torch.Tensor, 
-                          weight_text: float = 0.5) -> torch.Tensor:
-        """Combine text and image embeddings with weighted average"""
-        weight_image = 1.0 - weight_text
-        combined = weight_text * text_embedding + weight_image * image_embedding
-        combined = combined / combined.norm(dim=-1, keepdim=True)
-        return combined
+            image_features = self.model.get_image_features(**image_inputs)
+            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+        return image_features.cpu()
 
 clip_service = CLIPService()
