@@ -1,32 +1,26 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Gallery } from "react-grid-gallery";
-import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
-import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import SearchBar from './components/SearchBar';
-import PhotoInfo from './components/PhotoInfo';
+import Lightbox from './components/Lightbox';
+import Pagination from './components/Pagination';
+import { searchByText, searchByImage, getImageUrl } from './services/api';
 import './App.css';
-import { searchPhotos } from './services/api';
 
-// Create a new SearchResults component at the top of your file, before the App component
 const SearchResults = React.memo(({ 
-  photos, 
-  isLoading, 
-  hasSearched, 
-  error, 
-  openLightbox, 
-  viewerIsOpen, 
-  currentImage, 
-  closeLightbox, 
-  lightboxSlides, 
-  thumbnailImageComponent 
+  photos,
+  isLoading,
+  error,
+  onClick,
+  currentPage,
+  setCurrentPage,
+  hasMore,
 }) => {
   if (isLoading) {
     return (
       <div className="loading-indicator">
         <div className="spinner"></div>
-        <p>Searching historical maps...</p>
       </div>
     );
   }
@@ -45,42 +39,25 @@ const SearchResults = React.memo(({
         <Gallery 
           images={photos}
           enableImageSelection={false}
-          thumbnailImageComponent={thumbnailImageComponent}
-          onClick={(index) => openLightbox(index)}
+          onClick={(index) => onClick(index)}
           margin={2}
           rowHeight={180}
           targetRowHeight={200}
           containerWidth={window.innerWidth * 0.95}
         />
-        {viewerIsOpen && (
-          <Lightbox
-            slides={lightboxSlides}
-            open={viewerIsOpen}
-            index={currentImage}
-            close={closeLightbox}
-            controller={{ closeOnBackdropClick: true }}
-            render={{
-              buttonPrev: photos.length <= 1 ? () => null : undefined,
-              buttonNext: photos.length <= 1 ? () => null : undefined,
-            }}
-          />
-        )}
-      </div>
-    );
-  }
-
-  if (hasSearched) {
-    return (
-      <div className="no-results">
-        <p>No maps found. Try a different search query.</p>
+        <Pagination 
+          currentPage={currentPage} 
+          setCurrentPage={setCurrentPage} 
+          hasMore={hasMore} 
+          isLoading={isLoading}
+        />
       </div>
     );
   }
 
   return (
     <div className="welcome-message">
-      <p>Enter a search term to explore historical maps.</p>
-      <p>Try searching for subjects, time periods, locations, or visual elements.</p>
+      <p>Enter a search term or upload a similar image to explore historical maps.</p>
     </div>
   );
 });
@@ -88,51 +65,36 @@ const SearchResults = React.memo(({
 function App() {
   const [photos, setPhotos] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentImage, setCurrentImage] = useState(0);
-  const [viewerIsOpen, setViewerIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState(null);
   const searchInputRef = useRef(null);
+  const [selectedMap, setSelectedMap] = useState(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [searchMode, setSearchMode] = useState('text'); // 'text' or 'image'
+  const resultsPerPage = 50;
 
-  // Format search results into the format expected by react-grid-gallery
   const formatPhotosForGallery = (results) => {
     return results.map(result => ({
-      src: `/api/images/${result.file_path}?size=full`,
-      thumbnail: `/api/images/${result.file_path}?size=thumbnail`,
-      thumbnailWidth: 320, // Default width if not available
-      thumbnailHeight: 212, // Default height with 3:2 aspect ratio
-      width: 800, // Default width for lightbox
-      height: 600, // Default height for lightbox
-      caption: result.metadata.title || result.file_name || 'Untitled',
-      alt: result.metadata.title ||
-      originalData: result,
-      customOverlay: (
-        <div className="custom-overlay">
-          <div className="custom-overlay-title">
-            {result.metadata.title || result.file_name || 'Untitled'}
-          </div>
-          <div className="custom-overlay-similarity">
-            Similarity score: {result.similarity.toFixed(3)}
-          </div>
-        </div>
-      )
+      src: getImageUrl(result.id, 200),
+      width: 200,
+      height: 150,
+      alt: result.file_name,
+      originalData: result
     }));
   };
 
-  const handleSearch = async (query) => {
-    if (!query.trim()) {
-      setError('Please enter a search term');
-      return;
-    }
+  const handleSearchByText = async (query) => {
+    if (!query.trim()) return;
     
     setIsLoading(true);
     setError(null);
     
     try {
-      const results = await searchPhotos(query);
+      const results = await searchByText(query, resultsPerPage, currentPage);
       setPhotos(formatPhotosForGallery(results));
-      setHasSearched(true);
+      setHasMore(results.length >= resultsPerPage);
     } catch (error) {
       console.error('Error performing search:', error);
       setError('Search failed. Please try again.');
@@ -141,70 +103,91 @@ function App() {
     }
   };
 
-  const openLightbox = useCallback((index) => {
-    setCurrentImage(index);
-    setViewerIsOpen(true);
-  }, []);
-
-  const closeLightbox = () => {
-    setCurrentImage(0);
-    setViewerIsOpen(false);
+  const handleSearchByImage = async (image) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const results = await searchByImage(image, resultsPerPage, currentPage);
+      setPhotos(formatPhotosForGallery(results));
+      setHasMore(results.length >= resultsPerPage);
+    } catch (error) {
+      console.error('Error performing search:', error);
+      setError('Search failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Custom thumbnail image component for Gallery
-  const thumbnailImageComponent = useCallback(({ item, imageProps }) => (
-    <LazyLoadImage
-      alt={imageProps.alt}
-      effect="blur"
-      src={item.thumbnail}
-      height={item.thumbnailHeight}
-      width={item.thumbnailWidth}
-      style={{ objectFit: 'cover' }}
-      className="historical-image"
-      placeholderSrc='https://placehold.co/300x200'
-    />
-  ), []);
+  useEffect(() => {
+    if (searchMode === 'text' && searchQuery) {
+      handleSearchByText(searchQuery);
+    } else if (searchMode === 'image' && selectedImage) {
+      handleSearchByImage(selectedImage);
+    }
+  }, [currentPage]);
 
-  // Format photos for the Lightbox component
-  const lightboxSlides = useMemo(() => photos.map(photo => ({
-    src: photo.src,
-    alt: photo.alt,
-    title: photo.caption,
-    description: photo.originalData ? (
-      <PhotoInfo photo={photo.originalData} />
-    ) : null
-  })), [photos]);
+  const handleLightboxOpened = useCallback((index) => {
+    const selectedItem = photos[index].originalData;
+    const imageUrl = getImageUrl(selectedItem.id, 1600);
+
+    setSelectedMap(imageUrl);
+  }, [photos]);
+
+  const handleLightboxClosed = useCallback(() => {
+    setSelectedMap(null);
+  }, []);
+
+  const handleSearchModeChanged = useCallback((mode) => {
+    setSearchMode(mode);
+    setCurrentPage(1);
+    setPhotos([]);
+    setHasMore(false);
+
+    if (mode === 'text') {
+      setSelectedImage(null);
+    } else {
+      setSearchQuery('');
+    }
+  }, []);
 
   return (
     <div className="App">
       <header className="App-header">
-        <h1>My Digital Collections Explorer</h1>
-        <p>Explore historical maps using natural language search</p>
+        <h1>Historical Maps Explorer</h1>
+        <p>Explore maps using natural language search</p>
       </header>
       
       <main className="App-main">
         <div className="search-controls">
           <SearchBar 
+            inputRef={searchInputRef}
+            searchMode={searchMode}
+            setSearchMode={handleSearchModeChanged}
             searchQuery={searchQuery} 
             setSearchQuery={setSearchQuery}
-            onSearch={() => handleSearch(searchQuery)}
-            inputRef={searchInputRef}
+            selectedImage={selectedImage}
+            setSelectedImage={setSelectedImage}
+            onSearchByText={handleSearchByText}
+            onSearchByImage={handleSearchByImage}
           />
         </div>
-
         <SearchResults 
           photos={photos}
           isLoading={isLoading}
-          hasSearched={hasSearched}
           error={error}
-          openLightbox={openLightbox}
-          viewerIsOpen={viewerIsOpen}
-          currentImage={currentImage}
-          closeLightbox={closeLightbox}
-          lightboxSlides={lightboxSlides}
-          thumbnailImageComponent={thumbnailImageComponent}
+          onClick={handleLightboxOpened}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          hasMore={hasMore}
         />
       </main>
+
+      <Lightbox
+        isVisible={!!selectedMap}
+        imageUrl={selectedMap}
+        onBack={handleLightboxClosed}
+      />
     </div>
   );
 }

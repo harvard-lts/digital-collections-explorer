@@ -6,6 +6,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .App-header {
@@ -127,51 +128,6 @@ button:hover {
   filter: sepia(0%);
 }
 
-/* Custom overlay styling */
-.custom-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: rgba(30, 30, 30, 0.8);
-  color: #f8f5f0;
-  padding: 0.5rem;
-  text-align: left;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 3;
-}
-
-.ReactGridGallery_tile:hover .custom-overlay {
-  opacity: 1;
-}
-
-.custom-overlay-title {
-  font-size: 0.9rem;
-  margin-bottom: 0.25rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.custom-overlay-similarity {
-  font-size: 0.8rem;
-  color: #d0b49f;
-}
-
-.custom-overlay-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.custom-overlay-tag {
-  font-size: 0.7rem;
-  background-color: rgba(0, 0, 0, 0.3);
-  padding: 0.1rem 0.3rem;
-  border-radius: 2px;
-}
-
 .loading-indicator {
   display: flex;
   flex-direction: column;
@@ -214,7 +170,6 @@ button:hover {
   margin: 0.5rem 0;
 }
 
-/* Responsive adjustments */
 @media (min-width: 768px) {
   .search-controls {
     flex-direction: row;
@@ -229,20 +184,3 @@ button:hover {
     flex: 1;
   }
 }
-
-/* Lightbox customization */
-.yarl__container {
-  background-color: rgba(0, 0, 0, 0.9);
-}
-
-.yarl__slide_description {
-  background-color: rgba(0, 0, 0, 0.7);
-  max-height: 40%;
-  overflow-y: auto;
-}
-
-/* Make the gallery container take full width */
-.gallery-container > div {
-  width: 100% !important;
-  max-width: 100% !important;
-} 

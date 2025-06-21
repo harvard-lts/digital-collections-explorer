@@ -1,34 +1,83 @@
 import React from 'react';
+import ImageUpload from './ImageUpload';
 import './SearchBar.css';
 
-function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef }) {
+function SearchBar({
+  inputRef,
+  searchMode,
+  setSearchMode,
+  searchQuery,
+  setSearchQuery,
+  selectedImage,
+  setSelectedImage,
+  onSearchByText,
+  onSearchByImage,
+}) {
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSearch(searchQuery);
+    
+    if (searchMode === 'text' && searchQuery) {
+      onSearchByText(searchQuery);
+    } else if (searchMode === 'image' && selectedImage) {
+      onSearchByImage(selectedImage);
+    }
   };
 
   return (
     <div className="search-bar">
-      <form onSubmit={handleSubmit}>
-        <input
-          ref={inputRef}
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search historical maps..."
-          className="search-input"
-          aria-label="Search maps"
-        />
-        <button type="submit" className="search-button">
-          <span className="search-icon">🔍</span>
-          <span className="search-text">Search</span>
+      <div className="search-mode-selector">
+        <button 
+          className={`mode-button ${searchMode === 'text' ? 'active' : ''}`}
+          onClick={() => setSearchMode('text')}
+          type="button"
+        >
+          Text Search
         </button>
-      </form>
-      <div className="search-suggestions">
-        <p>Try: "city streets" • "rural landscapes" • "women in uniform" • "symbol of capitalization"</p>
+        <button 
+          className={`mode-button ${searchMode === 'image' ? 'active' : ''}`}
+          onClick={() => setSearchMode('image')}
+          type="button"
+        >
+          Image Search
+        </button>
       </div>
+
+      <form onSubmit={handleSubmit}>
+        {searchMode === 'text' ? (
+          <>
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search historical maps..."
+              className="search-input"
+              aria-label="Search maps"
+            />
+            <button type="submit" className="search-button">
+              <span className="search-icon">🔍</span>
+              <span className="search-text">Search</span>
+            </button>
+          </>
+        ) : (
+          <div className="image-search-container">
+            <ImageUpload 
+              selectedImage={selectedImage}
+              setSelectedImage={setSelectedImage}
+            />
+            <button 
+              type="submit" 
+              className="search-button"
+              disabled={!selectedImage}
+            >
+              <span className="search-icon">🔍</span>
+              <span className="search-text">Find Similar</span>
+            </button>
+          </div>
+        )}
+      </form>
     </div>
   );
 }
 
-export default SearchBar; 
+export default SearchBar;
