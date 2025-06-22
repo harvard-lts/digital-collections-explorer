@@ -6,8 +6,8 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import SearchBar from './components/SearchBar';
 import PhotoInfo from './components/PhotoInfo';
+import { searchByText, searchByImage } from './services/api';
 import './App.css';
-import { searchPhotos, searchByImage } from './services/api';
 
 const Pagination = ({ currentPage, setCurrentPage, hasMore, isLoading }) => {
   return (
@@ -34,7 +34,7 @@ const Pagination = ({ currentPage, setCurrentPage, hasMore, isLoading }) => {
 const ResultsPerPageDropdown = ({ resultsPerPage, setResultsPerPage, setCurrentPage, isLoading }) => {
   const handleResultsPerPageChange = (e) => {
     setResultsPerPage(parseInt(e.target.value, 10));
-    setCurrentPage(1); // Reset to first page when changing results per page
+    setCurrentPage(1);
   };
 
   return (
@@ -55,7 +55,6 @@ const ResultsPerPageDropdown = ({ resultsPerPage, setResultsPerPage, setCurrentP
   );
 };
 
-// Create a new SearchResults component at the top of your file, before the App component
 const SearchResults = React.memo(({ 
   photos, 
   isLoading, 
@@ -71,8 +70,6 @@ const SearchResults = React.memo(({
   setCurrentPage,
   hasMore,
   searchType,
-  resultsPerPage,
-  setResultsPerPage
 }) => {
   if (isLoading) {
     return (
@@ -153,10 +150,10 @@ function App() {
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState(null);
   const searchInputRef = useRef(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchType, setSearchType] = useState('text');
   const [hasMore, setHasMore] = useState(false);
-  const [resultsPerPage, setResultsPerPage] = useState(30); // Default limit per page with state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [resultsPerPage, setResultsPerPage] = useState(50);
 
   // Format search results into the format expected by react-grid-gallery
   const formatPhotosForGallery = (results) => {
@@ -180,7 +177,7 @@ function App() {
     }));
   };
 
-  const handleSearch = async (query) => {
+  const handleSearchByText = async (query) => {
     if (!query.trim()) {
       setError('Please enter a search term');
       return;
@@ -189,13 +186,13 @@ function App() {
     setIsLoading(true);
     setError(null);
     setSearchType('text');
-    setSearchQuery(query); // Save the query for pagination
+    setSearchQuery(query);
     
     try {
-      const results = await searchPhotos(query, resultsPerPage, currentPage);
+      const results = await searchByText(query, resultsPerPage, currentPage);
       setPhotos(formatPhotosForGallery(results));
       setHasSearched(true);
-      setHasMore(results.length >= resultsPerPage); // If we got exactly the number requested, assume there might be more
+      setHasMore(results.length >= resultsPerPage);
     } catch (error) {
       console.error('Error performing search:', error);
       setError('Search failed. Please try again.');
@@ -226,7 +223,7 @@ function App() {
   React.useEffect(() => {
     if (hasSearched) {
       if (searchType === 'text' && searchQuery.trim()) {
-        handleSearch(searchQuery);
+        handleSearchByText(searchQuery);
       } else if (searchType === 'image') {
         // We would need to store the current image to re-run the search
         // This would require additional state management which is not implemented here
@@ -280,7 +277,7 @@ function App() {
           <SearchBar 
             searchQuery={searchQuery} 
             setSearchQuery={setSearchQuery}
-            onSearch={() => handleSearch(searchQuery)}
+            onSearch={handleSearchByText}
             onImageSearch={handleImageSearch}
             inputRef={searchInputRef}
           />

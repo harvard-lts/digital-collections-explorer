@@ -1,29 +1,23 @@
-// API service for interacting with the backend
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.API_BASE_URL;
 
 /**
- * Search for photographs by text query
+ * Search for similar photographs by text
  * @param {string} query - The text query
  * @param {number} limit - Maximum number of results to return (default: 50)
  * @param {number} page - Page number for pagination (default: 1)
  * @returns {Promise<Array>} - Array of search results
  */
-export const searchPhotos = async (query, limit = 50, page = 1) => {
+export const searchByText = async (query, limit = 50, page = 1) => {
   try {
-    // Ensure page parameter is a valid number
-    const validPage = Math.max(1, parseInt(page) || 1);
-    
-    console.log(`Searching with query: "${query}", limit: ${limit}, page: ${validPage}`);
-    const response = await fetch(`${API_URL}/api/search/text?query=${encodeURIComponent(query)}&limit=${limit}&page=${validPage}`);
+    const pageParam = Math.max(1, parseInt(page) || 1);
+    const response = await fetch(`${API_URL}/api/search/text?query=${encodeURIComponent(query)}&limit=${limit}&page=${pageParam}`);
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
     
     const { results } = await response.json();
-    console.log(`Received ${results.length} results for page ${validPage}`);
     
-    // Transform the data to match the expected format in the frontend
     return results.map(item => ({
       id: item.id,
       file_path: item.file_path,
