@@ -1,8 +1,11 @@
 .git/
 .DS_Store
 node_modules/
+**/node_modules/
+**/.vite/
 venv/
 *.log
 *.pyc
 __pycache__/
 data/
+**/dist/
