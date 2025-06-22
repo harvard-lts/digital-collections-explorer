@@ -17,14 +17,11 @@ class Settings(BaseSettings):
     batch_size: int = 32
     
     # Data directories
+    collection_type: str = "photographs" # this is the default collection type, will be overwritten by config.json
     raw_data_dir: str = "data/raw"
     processed_data_dir: str = "data/processed"
     embeddings_dir: str = "data/embeddings"
     thumbnails_dir: str = "data/thumbnails"
-    
-    # Frontend settings
-    frontend_dir: str = "src/frontend/photographs/dist"
-    collection_type: str = "photographs"
 
 def load_config():
     """Load configuration from JSON file"""
@@ -50,15 +47,11 @@ def load_config():
         settings_dict["batch_size"] = model_config.get("batch_size", 32)
         
         # Data directories
+        settings_dict["collection_type"] = config_data.get("collection_type", "photographs")
         settings_dict["raw_data_dir"] = config_data.get("raw_data_dir", "data/raw")
         settings_dict["processed_data_dir"] = config_data.get("processed_data_dir", "data/processed")
         settings_dict["embeddings_dir"] = config_data.get("embeddings_dir", "data/embeddings")
         settings_dict["thumbnails_dir"] = config_data.get("thumbnails_dir", "data/thumbnails")
-        
-        # Frontend settings
-        frontend_config = config_data.get("frontend_config", {})
-        settings_dict["frontend_dir"] = frontend_config.get("frontend_dir", f"src/frontend/{frontend_config.get('collection_type', 'photographs')}/dist")
-        settings_dict["collection_type"] = frontend_config.get("collection_type", "photographs")
         
         return Settings(**settings_dict)
     
