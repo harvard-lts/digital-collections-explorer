@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.API_BASE_URL;
 
 export const searchContent = async (query, limit = 30, page = 1) => {
   try {

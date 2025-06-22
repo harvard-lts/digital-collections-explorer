@@ -47,14 +47,12 @@ installAndBuildFrontend(collectionType);
 console.log(chalk.green('\n✓ Setup completed successfully!'));
 console.log(chalk.yellow('\n Go check README.md for the next step.'));
 
-// Function to update the configuration file with user selections
+// Function to update `config.json` with the user's selections
 function updateConfig(collectionType) {
   console.log(chalk.gray('Updating configuration...'));
   
   try {
-    // Update config.json with frontend configuration
     const configPath = path.resolve(process.cwd(), 'config.json');
-    const backendConfigPath = path.resolve(process.cwd(), 'src', 'backend', 'core', 'config.py');
     
     if (!fs.existsSync(configPath)) {
       console.error(chalk.red(`Error: Configuration file not found: ${configPath}`));
@@ -62,38 +60,12 @@ function updateConfig(collectionType) {
       process.exit(1);
     }
     
-    // Update config.json
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     
-    // Update frontend configuration
-    config.frontend_config = {
-      ...config.frontend_config,
-      collection_type: collectionType,
-      frontend_dir: `src/frontend/${collectionType}/dist`
-    };
+    config.collection_type = collectionType;
     
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     console.log(chalk.green('✓ config.json updated'));
-    
-    // Update backend config.py
-    if (fs.existsSync(backendConfigPath)) {
-      let configPy = fs.readFileSync(backendConfigPath, 'utf8');
-      
-      // Update the default frontend settings
-      configPy = configPy.replace(
-        /frontend_dir: str = ".*?"/,
-        `frontend_dir: str = "src/frontend/${collectionType}/dist"`
-      );
-      configPy = configPy.replace(
-        /collection_type: str = ".*?"/,
-        `collection_type: str = "${collectionType}"`
-      );
-      
-      fs.writeFileSync(backendConfigPath, configPy);
-      console.log(chalk.green('✓ Backend config.py updated'));
-    } else {
-      console.warn(chalk.yellow('Warning: Backend config.py not found, skipping backend configuration update'));
-    }
     
   } catch (error) {
     console.error(chalk.red(`Error updating configuration: ${error.message}`));

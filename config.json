@@ -1,4 +1,5 @@
 {
+  "collection_type": "photographs",
   "raw_data_dir": "data/raw",
   "processed_data_dir": "data/processed",
   "embeddings_dir": "data/embeddings",
@@ -11,11 +12,6 @@
   "api_config": {
     "host": "0.0.0.0",
     "port": 8000,
-    "debug": true
-  },
-  "frontend_config": {
-    "port": 3000,
-    "collection_type": "photographs",
-    "frontend_dir": "src/frontend/photographs/dist"
+    "debug": false
   }
 }

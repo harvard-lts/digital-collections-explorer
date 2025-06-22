@@ -1,22 +1,32 @@
 #!/usr/bin/env node
 
+/** build.js -- "Rebuilds the Frontend for Production Deployment."
+ * This script is intended for use after customizing the frontend and making code changes. 
+ * Note that the frontend is initially built during the setup process (setup.js).
+ * 
+ * Usage:
+ * 1. Customize the frontend code
+ * 2. Run `npm run frontend-build` to invoke this script
+ * 3. Then, you can deploy the frontend bundle to your server
+ **/
+
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
 // Determine which collection type to build
-let collectionType = 'photographs'; // Default
+let collectionType = 'photographs'; // Default collection type, will be overwritten by config.json later
 
 try {
-  // Read from config.json instead of active-type.json
   const configPath = path.resolve(process.cwd(), 'config.json');
+
   if (fs.existsSync(configPath)) {
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    // Get collection_type from frontend_config
-    if (config.frontend_config && config.frontend_config.collection_type) {
-      collectionType = config.frontend_config.collection_type;
+
+    if (config.collection_type) {
+      collectionType = config.collection_type;
     } else {
-      console.log('No collection_type found in config.json frontend_config');
+      console.log('No collection_type found in config.json');
       console.log('Defaulting to photographs');
     }
   } else {
@@ -36,7 +46,6 @@ try {
   process.chdir(collectionDir);
   console.log(`Changed directory to: ${collectionDir}`);
   
-  // Run npm build
   console.log('Running npm build...');
   execSync('npm run build', { stdio: 'inherit' });
   

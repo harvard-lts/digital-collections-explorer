@@ -92,8 +92,8 @@ The API server will start at http://localhost:8000
 For active development with hot-reloading:
 
 ```bash
-# First, make sure the backend server is up
-# If the server is not ready, cd into the root path and run:
+# To enable auto-reloading of the backend server whenever code changes, first modify the `api_config.debug` setting in in `config.json` from `false` to `true`.
+# Next, ensure the backend server is running. If the server is not yet running, navigate to the project's root directory and execute:
 python -m src.backend.main
 
 # Start the frontend development server
@@ -101,7 +101,7 @@ cd src/frontend/[photographs|maps|web-archives]
 npm run dev
 ```
 
-This will start a development server at http://localhost:3000 with hot-reloading enabled. The development server will automatically proxy API requests to the backend at http://localhost:8000.
+This will start a frontend dev server at http://localhost:5173 with hot-reloading enabled. The development server will automatically proxy API requests to the backend at http://localhost:8000.
 
 #### Production Build
 
