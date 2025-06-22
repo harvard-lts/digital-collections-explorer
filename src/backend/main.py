@@ -34,9 +34,16 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+cors_origins = [
+    "http://0.0.0.0:8000",
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "https://digital-collections-explorer.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,7 +58,8 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
 
-frontend_dir = Path(settings.frontend_dir)
+frontend_dir = Path(f"src/frontend/{settings.collection_type}/dist")
+
 if frontend_dir.exists():
     app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
     logger.info(f"Serving frontend from {frontend_dir}")
