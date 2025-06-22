@@ -17,6 +17,7 @@ WORKDIR /app
 COPY . /app
 
 COPY --from=node-builder /build/dist /tmp/dist
+COPY --from=node-builder /app/config.json /app/config.json
 
 ARG COLLECTION_TYPE=photographs
 RUN mkdir -p /app/src/frontend/$COLLECTION_TYPE/dist && \
