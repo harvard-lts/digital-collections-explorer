@@ -39,8 +39,7 @@ def generate_embeddings(model, processor, images, device="cuda"):
     """Generate embeddings for a list of images"""
     try:
         inputs = processor(images=images, return_tensors="pt", padding=True)
-        if device != "cpu":
-            inputs = {k: v.to(device) for k, v in inputs.items()}
+        inputs = {k: v.to(device) for k, v in inputs.items()}
         
         with torch.no_grad():
             embeddings = model.get_image_features(**inputs)
