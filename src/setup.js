@@ -11,7 +11,7 @@ const helpArg = args.includes('--help') || args.includes('-h');
 const typeArg = args.find(arg => arg.startsWith('--type='));
 
 // Available collection types
-const COLLECTION_TYPES = ['photographs', 'maps', 'web-archives'];
+const COLLECTION_TYPES = ['photographs', 'maps', 'documents'];
 
 // Show help if requested or if no type is provided
 if (helpArg || !typeArg) {
@@ -20,7 +20,7 @@ if (helpArg || !typeArg) {
   console.log('Usage: npm run setup -- --type=<collection-type> [options]');
   console.log('\nOptions:');
   console.log('  --type=<collection-type>  Specify the collection type (required)');
-  console.log('                           Available types: photographs, maps, web-archives');
+  console.log('                           Available types: photographs, maps, documents');
   console.log('  --help, -h               Show this help message');
   process.exit(helpArg ? 0 : 1);
 }

@@ -50,7 +50,7 @@ npm run setup -- --type=photographs
 Available collection types:
 - `photographs`: For photo collections and image archives
 - `maps`: For map collections
-- `web-archives`: For web archive collections
+- `documents`: For born-digital documents collections
 
 This will configure the project for your specific collection type and build the frontend.
 
@@ -97,7 +97,7 @@ For active development with hot-reloading:
 python -m src.backend.main
 
 # Start the frontend development server
-cd src/frontend/[photographs|maps|web-archives]
+cd src/frontend/[photographs|maps|documents]
 npm run dev
 ```
 
