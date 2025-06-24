@@ -5,7 +5,7 @@ import 'react-lazy-load-image-component/src/effects/blur.css';
 import SearchBar from './components/SearchBar';
 import Lightbox from './components/Lightbox';
 import Pagination from './components/Pagination';
-import { searchByText, searchByImage, getImageUrl } from './services/api';
+import { searchByText, searchByImage, getImageUrl, getEmbeddingStats } from './services/api';
 import './App.css';
 
 const SearchResults = React.memo(({ 
@@ -73,7 +73,21 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
   const [searchMode, setSearchMode] = useState('text'); // 'text' or 'image'
+  const [embeddingCount, setEmbeddingCount] = useState(null);
   const resultsPerPage = 50;
+
+  useEffect(() => {
+    const fetchEmbeddingStats = async () => {
+      try {
+        const stats = await getEmbeddingStats();
+        setEmbeddingCount(stats.count);
+      } catch (error) {
+        console.error('Failed to load embedding stats:', error);
+      }
+    };
+
+    fetchEmbeddingStats();
+  }, []);
 
   const formatPhotosForGallery = (results) => {
     return results.map(result => ({
@@ -172,6 +186,11 @@ function App() {
             onSearchByImage={handleSearchByImage}
           />
         </div>
+        {embeddingCount !== null && (
+          <p className="embedding-count">
+            Total number of maps in the collection: {embeddingCount.toLocaleString()}
+          </p>
+        )}
         <SearchResults 
           photos={photos}
           isLoading={isLoading}

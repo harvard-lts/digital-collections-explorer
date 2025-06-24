@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import './SearchBar.css';
 import { getEmbeddingStats } from '../services/api';
+import './SearchBar.css';
 
 function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef, onImageSearch }) {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -9,7 +9,6 @@ function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef, onImageSea
   const [embeddingCount, setEmbeddingCount] = useState(null);
 
   useEffect(() => {
-    // Fetch embedding statistics when component mounts
     const fetchEmbeddingStats = async () => {
       try {
         const stats = await getEmbeddingStats();

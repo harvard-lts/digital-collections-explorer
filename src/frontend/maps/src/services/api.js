@@ -88,3 +88,23 @@ export const searchByImage = async (image, limit = 50, page = 1) => {
     throw error;
   }
 };
+
+/**
+ * Get statistics about embeddings (total count)
+ * @returns {Promise<Object>} - Statistics object with count property
+ */
+export const getEmbeddingStats = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/embeddings/count`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching embedding stats:', error);
+    return { count: 0 };
+  }
+};
