@@ -1,11 +1,16 @@
 const API_URL = import.meta.env.API_BASE_URL;
 
-export const getImageUrl = (documentId, size) => {
-  if (!documentId) return '';
-  if (size) {
-    return `${API_URL}/images/${encodeURIComponent(documentId)}?size=${size}`;
-  }
-  return `${API_URL}/images/${encodeURIComponent(documentId)}`;
+/**
+ * Library of Congress image URL processing adaptation
+ */
+export const getImageUrl = (url, size = 'full') => {
+  const sizeParam = typeof size === 'string' ? size : `${size},`;
+  const urlParts = url.split('/');
+  const iiifIndex = urlParts.findIndex(part => part === 'iiif');
+  const identifier = iiifIndex !== -1 ? urlParts.slice(iiifIndex + 1, -4).join('/') : '';
+  const baseUrl = `https://tile.loc.gov/image-services/iiif/${identifier}`;
+  
+  return `${baseUrl}/full/${sizeParam}/0/default.jpg`;
 };
 
 /**
