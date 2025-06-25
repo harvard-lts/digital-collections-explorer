@@ -1,13 +1,13 @@
 import os
 import json
 import torch
-import numpy as np
 from pathlib import Path
 import logging
+import time
 from pdf2image import convert_from_path
 from PIL import Image
 from dataclasses import dataclass
-from typing import Dict, Any, List
+from typing import Dict, Any
 import PyPDF2
 
 from transformers import CLIPProcessor, CLIPModel
@@ -56,7 +56,6 @@ def process_pdf(file_path, model, processor, device, processed_dir, thumbnails_d
         file_path = Path(file_path)
         
         try:
-            # Check if file exists and is readable
             if not file_path.exists():
                 logger.error(f"PDF file does not exist: {file_path}")
                 return None
@@ -64,14 +63,12 @@ def process_pdf(file_path, model, processor, device, processed_dir, thumbnails_d
             if not os.access(file_path, os.R_OK):
                 logger.error(f"PDF file is not readable: {file_path}")
                 return None
-                
-            # Convert PDF to images
+            
             images = convert_from_path(file_path)
         except Exception as e:
             logger.error(f"Error converting PDF to images: {file_path}, error: {e}")
             return None
         
-        # Get PDF metadata
         try:
             with open(file_path, 'rb') as f:
                 pdf = PyPDF2.PdfReader(f)
@@ -85,24 +82,20 @@ def process_pdf(file_path, model, processor, device, processed_dir, thumbnails_d
         pdf_thumbnails_dir = thumbnails_dir / file_path.stem
         pdf_thumbnails_dir.mkdir(parents=True, exist_ok=True)
         
-        # Process each page separately and collect results
         embeddings_list = []
         processed_pages = []
         
         for i, image in enumerate(images):
             try:
-                # Create and save thumbnail
                 thumbnail = image.copy()
                 thumbnail.thumbnail((400, 400), Image.Resampling.LANCZOS)
                 thumbnail_path = pdf_thumbnails_dir / f"{i}.jpg"
                 thumbnail.save(thumbnail_path, "JPEG", quality=85)
                 
-                # Save compressed images
                 processed_image_path = pdf_processed_dir / f"{i}.jpg"
                 processed_image = resize_image_proportionally(image.copy())
                 processed_image.save(processed_image_path, "JPEG", quality=90)
                 
-                # Generate embedding for this page
                 page_embedding = generate_embeddings(model, processor, [image], device)
                 if page_embedding is not None:
                     embeddings_list.append(page_embedding[0])  # Extract the embedding vector
@@ -144,27 +137,22 @@ def process_image(file_path, model, processor, device, processed_dir, thumbnails
         file_path = Path(file_path)
         image = Image.open(file_path).convert('RGB')
         
-        # Create thumbnail
         thumbnail = image.copy()
         thumbnail.thumbnail((400, 400), Image.Resampling.LANCZOS)
         thumbnail_path = thumbnails_dir / f"{file_path.stem}.jpg"
         thumbnail.save(thumbnail_path, "JPEG", quality=85)
         
-        # Create compressed image (resized if needed)
         processed_image = resize_image_proportionally(image.copy())
         
-        # Create directory structure for processed images
         image_processed_dir = processed_dir / file_path.stem
         image_processed_dir.mkdir(parents=True, exist_ok=True)
         processed_image_path = image_processed_dir / "0.jpg"
         processed_image.save(processed_image_path, "JPEG", quality=90)
         
-        # Generate embedding
         embedding = generate_embeddings(model, processor, [image], device)
         if embedding is None:
             return None
         
-        # Create metadata
         metadata = {
             'file_name': file_path.name,
             'type': 'image',
@@ -214,12 +202,10 @@ def process_files(model: Any,
         logger.warning(f"No files found in {raw_data_dir}")
         return ProcessingResult({}, {}, 0)
     
-    # Process files and generate embeddings
     embeddings = {}
     metadata = {}
     skipped_files = 0
     
-    # Process each file
     for file_path in files:
         try:
             if file_path.suffix.lower() == '.pdf':
@@ -240,7 +226,8 @@ def process_files(model: Any,
     return ProcessingResult(embeddings, metadata, skipped_files)
 
 def main():
-    # Use settings from config
+    start_time = time.time()
+    
     RAW_DATA_DIR = Path(settings.raw_data_dir)
     EMBEDDINGS_DIR = Path(settings.embeddings_dir)
     PROCESSED_DIR = Path(settings.processed_data_dir)
@@ -255,28 +242,22 @@ def main():
     logger.info(f"Saving thumbnails to: {THUMBNAILS_DIR}")
     logger.info(f"Using model: {MODEL_ID}")
     
-    # Create directories if they don't exist
     EMBEDDINGS_DIR.mkdir(parents=True, exist_ok=True)
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     THUMBNAILS_DIR.mkdir(parents=True, exist_ok=True)
     
-    # Load CLIP model and processor
     model = CLIPModel.from_pretrained(MODEL_ID).to(DEVICE)
     processor = CLIPProcessor.from_pretrained(MODEL_ID)
     
-    # Process all files
     result = process_files(model, processor, DEVICE, RAW_DATA_DIR, PROCESSED_DIR, THUMBNAILS_DIR)
     
-    # Save embeddings and metadata
     embeddings_file = EMBEDDINGS_DIR / "embeddings.pt"
     item_ids_file = EMBEDDINGS_DIR / "item_ids.pt"
     metadata_file = EMBEDDINGS_DIR / "metadata.json"
     
-    # Get item IDs and embeddings as arrays
     item_ids = list(result.embeddings.keys())
     embeddings_tensor = torch.stack(list(result.embeddings.values()))
     
-    # Save to files
     torch.save(embeddings_tensor, embeddings_file)
     torch.save(item_ids, item_ids_file)
     with open(metadata_file, "w") as f:
@@ -286,6 +267,11 @@ def main():
     logger.info(f"Saved {len(item_ids)} item IDs to {item_ids_file}")
     logger.info(f"Saved metadata to {metadata_file}")
     logger.info(f"Skipped {result.skipped_files} files")
+
+    end_time = time.time()
+    total_time = end_time - start_time
+    formatted_time = time.strftime('%H:%M:%S', time.gmtime(total_time))
+    logger.info(f"Total processing time: {formatted_time}")
 
 if __name__ == "__main__":
     main()
