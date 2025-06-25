@@ -14,7 +14,7 @@ const SearchResults = React.memo(({
     return (
       <div className="loading-indicator">
         <div className="spinner"></div>
-        <p>Searching web archives...</p>
+        <p>Searching documents...</p>
       </div>
     );
   }
@@ -38,14 +38,14 @@ const SearchResults = React.memo(({
   if (hasSearched) {
     return (
       <div className="no-results">
-        <p>No web archives found. Try a different search query.</p>
+        <p>No documents found. Try a different search query.</p>
       </div>
     );
   }
 
   return (
     <div className="welcome-message">
-      <p>Enter a search term to explore web archives.</p>
+      <p>Enter a search term to explore documents.</p>
       <p>Try searching for subjects, time periods, locations, or visual elements.</p>
     </div>
   );
@@ -83,8 +83,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Web Archives Explorer</h1>
-        <p>Explore web archives using natural language search</p>
+        <h1>Documents Explorer</h1>
+        <p>Explore documents using natural language search</p>
       </header>
       
       <main className="App-main">

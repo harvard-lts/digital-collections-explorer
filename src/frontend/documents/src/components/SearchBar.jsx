@@ -15,9 +15,9 @@ function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef }) {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search web archives..."
+          placeholder="Search documents..."
           className="search-input"
-          aria-label="Search web archives"
+          aria-label="Search documents"
         />
         <button type="submit" className="search-button">
           <span className="search-icon">🔍</span>

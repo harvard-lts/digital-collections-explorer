@@ -1,6 +1,6 @@
 # Digital Collections Explorer
 
-A web-based exploratory search system leveraging CLIP (Contrastive Language-Image Pre-training) models for enhanced discovery of digital collections, including maps, photographs, and web archives.
+A web-based exploratory search system leveraging CLIP (Contrastive Language-Image Pre-training) models for enhanced discovery of digital collections, including maps, photographs, and born-digital documents.
 
 ## Overview
 
@@ -20,7 +20,7 @@ Our project extends their work in two main directions:
 - Support for various digital collection types:
   - Historical maps
   - Photographs
-  - Web archives
+  - Born-digital documents
 - Fine-tuned CLIP models for improved accuracy (coming soon)
 - User-friendly web interface for exploration
 
