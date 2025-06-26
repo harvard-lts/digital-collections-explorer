@@ -1,176 +1,36 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { Gallery } from "react-grid-gallery";
-import Lightbox from "yet-another-react-lightbox";
-import "yet-another-react-lightbox/styles.css";
-import { LazyLoadImage } from 'react-lazy-load-image-component';
-import 'react-lazy-load-image-component/src/effects/blur.css';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import SearchBar from './components/SearchBar';
-import PhotoInfo from './components/PhotoInfo';
+import { ResultsPerPageDropdown } from './components/Pagination';
+import SearchResults from './components/SearchResults';
 import { searchByText, searchByImage } from './services/api';
 import './App.css';
-
-const Pagination = ({ currentPage, setCurrentPage, hasMore, isLoading }) => {
-  return (
-    <div className="pagination">
-      <button 
-        className="pagination-button"
-        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-        disabled={currentPage <= 1 || isLoading}
-      >
-        Previous
-      </button>
-      <span>Page {currentPage}</span>
-      <button 
-        className="pagination-button"
-        onClick={() => setCurrentPage(prev => prev + 1)}
-        disabled={!hasMore || isLoading}
-      >
-        Next
-      </button>
-    </div>
-  );
-};
-
-const ResultsPerPageDropdown = ({ resultsPerPage, setResultsPerPage, setCurrentPage, isLoading }) => {
-  const handleResultsPerPageChange = (e) => {
-    setResultsPerPage(parseInt(e.target.value, 10));
-    setCurrentPage(1);
-  };
-
-  return (
-    <div className="results-per-page">
-      <label htmlFor="resultsPerPage">Results per page:</label>
-      <select 
-        id="resultsPerPage" 
-        value={resultsPerPage} 
-        onChange={handleResultsPerPageChange}
-        className="results-dropdown"
-        disabled={isLoading}
-      >
-        <option value={30}>30</option>
-        <option value={50}>50</option>
-        <option value={100}>100</option>
-      </select>
-    </div>
-  );
-};
-
-const SearchResults = React.memo(({ 
-  photos, 
-  isLoading, 
-  hasSearched, 
-  error, 
-  openLightbox, 
-  viewerIsOpen, 
-  currentImage, 
-  closeLightbox, 
-  lightboxSlides, 
-  thumbnailImageComponent,
-  currentPage,
-  setCurrentPage,
-  hasMore,
-  searchType,
-}) => {
-  if (isLoading) {
-    return (
-      <div className="loading-indicator">
-        <div className="spinner"></div>
-        <p>{searchType === 'text' ? 'Searching historical photographs...' : 'Finding similar images...'}</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="error-message">
-        <p>{error}</p>
-      </div>
-    );
-  }
-
-  if (photos.length > 0) {
-    return (
-      <div className="gallery-container">
-        <Gallery 
-          images={photos}
-          enableImageSelection={false}
-          thumbnailImageComponent={thumbnailImageComponent}
-          onClick={(index) => openLightbox(index)}
-          margin={2}
-          rowHeight={180}
-          targetRowHeight={200}
-          containerWidth={window.innerWidth * 0.95}
-        />
-        {viewerIsOpen && (
-          <Lightbox
-            slides={lightboxSlides}
-            open={viewerIsOpen}
-            index={currentImage}
-            close={closeLightbox}
-            controller={{ closeOnBackdropClick: true }}
-            render={{
-              buttonPrev: photos.length <= 1 ? () => null : undefined,
-              buttonNext: photos.length <= 1 ? () => null : undefined,
-            }}
-          />
-        )}
-        <Pagination 
-          currentPage={currentPage} 
-          setCurrentPage={setCurrentPage} 
-          hasMore={hasMore} 
-          isLoading={isLoading}
-        />
-      </div>
-    );
-  }
-
-  if (hasSearched) {
-    return (
-      <div className="no-results">
-        <p>No photographs found. Try a different search query.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="welcome-message">
-      <p>Enter a search term to explore historical photographs.</p>
-      <p>Try searching for subjects, time periods, locations, or visual elements.</p>
-      <p>You can also search by uploading a similar image.</p>
-    </div>
-  );
-});
 
 function App() {
   const [photos, setPhotos] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentImage, setCurrentImage] = useState(0);
-  const [viewerIsOpen, setViewerIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState(null);
   const searchInputRef = useRef(null);
-  const [searchType, setSearchType] = useState('text');
+  const [searchMode, setSearchMode] = useState('text'); // 'text' or 'image'
+  const [uploadedImage, setUploadedImage] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [resultsPerPage, setResultsPerPage] = useState(50);
 
-  // Format search results into the format expected by react-grid-gallery
   const formatPhotosForGallery = (results) => {
     return results.map(result => ({
-      src: `/images/${result.file_path}?size=full`,
-      thumbnail: `/images/${result.file_path}?size=thumbnail`,
+      src: `/images/${result.id}?size=full`,
+      thumbnail: `/images/${result.id}?size=thumbnail`,
       thumbnailWidth: 320, // Default width if not available
       thumbnailHeight: 212, // Default height with 3:2 aspect ratio
       width: 800, // Default width for lightbox
       height: 600, // Default height for lightbox
-      caption: result.metadata.title || result.file_name || 'Untitled',
-      alt: result.metadata.title || '',
+      alt: result.metadata.file_name || '',
       originalData: result,
       customOverlay: (
         <div className="custom-overlay">
           <div className="custom-overlay-title">
-            {result.metadata.title || result.file_name || 'Untitled'}
+            {result.metadata.file_name || result.file_name || 'Untitled'}
           </div>
         </div>
       )
@@ -185,31 +45,29 @@ function App() {
     
     setIsLoading(true);
     setError(null);
-    setSearchType('text');
+    setSearchMode('text');
     setSearchQuery(query);
     
     try {
       const results = await searchByText(query, resultsPerPage, currentPage);
       setPhotos(formatPhotosForGallery(results));
-      setHasSearched(true);
       setHasMore(results.length >= resultsPerPage);
     } catch (error) {
       console.error('Error performing search:', error);
-      setError('Search failed. Please try again.');
+      setError('Text search failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleImageSearch = async (image) => {
+  const handleSearchByImage = async (image) => {
     setIsLoading(true);
     setError(null);
-    setSearchType('image');
+    setSearchMode('image');
     
     try {
       const results = await searchByImage(image, resultsPerPage, currentPage);
       setPhotos(formatPhotosForGallery(results));
-      setHasSearched(true);
       setHasMore(results.length >= resultsPerPage);
     } catch (error) {
       console.error('Error performing image search:', error);
@@ -219,51 +77,20 @@ function App() {
     }
   };
 
-  // Effect to perform search when page changes or results per page changes
-  React.useEffect(() => {
-    if (hasSearched) {
-      if (searchType === 'text' && searchQuery.trim()) {
-        handleSearchByText(searchQuery);
-      } else if (searchType === 'image') {
-        // We would need to store the current image to re-run the search
-        // This would require additional state management which is not implemented here
-      }
+  useEffect(() => {
+    if (searchMode === 'text' && searchQuery.trim()) {
+      handleSearchByText(searchQuery);
+    } else if (searchMode === 'image' && uploadedImage) {
+      handleSearchByImage(uploadedImage);
     }
-  }, [currentPage, resultsPerPage]); // Added resultsPerPage dependency
+  }, [currentPage, resultsPerPage]);
 
-  const openLightbox = useCallback((index) => {
-    setCurrentImage(index);
-    setViewerIsOpen(true);
+  const handleSearchModeChanged = useCallback((mode) => {
+    setSearchMode(mode);
+    setCurrentPage(1);
+    setPhotos([]);
+    setHasMore(false);
   }, []);
-
-  const closeLightbox = () => {
-    setCurrentImage(0);
-    setViewerIsOpen(false);
-  };
-
-  // Custom thumbnail image component for Gallery
-  const thumbnailImageComponent = useCallback(({ item, imageProps }) => (
-    <LazyLoadImage
-      alt={imageProps.alt}
-      effect="blur"
-      src={item.thumbnail}
-      height={item.thumbnailHeight}
-      width={item.thumbnailWidth}
-      style={{ objectFit: 'cover' }}
-      className="historical-image"
-      placeholderSrc='https://placehold.co/300x200'
-    />
-  ), []);
-
-  // Format photos for the Lightbox component
-  const lightboxSlides = useMemo(() => photos.map(photo => ({
-    src: photo.src,
-    alt: photo.alt,
-    title: photo.caption,
-    description: photo.originalData ? (
-      <PhotoInfo photo={photo.originalData} />
-    ) : null
-  })), [photos]);
 
   return (
     <div className="App">
@@ -274,39 +101,31 @@ function App() {
       
       <main className="App-main">
         <div className="search-controls">
-          <SearchBar 
-            searchQuery={searchQuery} 
-            setSearchQuery={setSearchQuery}
-            onSearch={handleSearchByText}
-            onImageSearch={handleImageSearch}
+          <SearchBar
             inputRef={searchInputRef}
+            searchMode={searchMode}
+            setSearchMode={handleSearchModeChanged}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            uploadedImage={uploadedImage}
+            setUploadedImage={setUploadedImage}
+            onSearchByText={handleSearchByText}
+            onSearchByImage={handleSearchByImage}
           />
         </div>
-
-        <ResultsPerPageDropdown 
-          resultsPerPage={resultsPerPage} 
-          setResultsPerPage={setResultsPerPage} 
-          setCurrentPage={setCurrentPage} 
-          isLoading={isLoading} 
+        <ResultsPerPageDropdown
+          resultsPerPage={resultsPerPage}
+          setResultsPerPage={setResultsPerPage}
+          setCurrentPage={setCurrentPage}
+          isLoading={isLoading}
         />
-
-        <SearchResults 
+        <SearchResults
           photos={photos}
           isLoading={isLoading}
-          hasSearched={hasSearched}
           error={error}
-          openLightbox={openLightbox}
-          viewerIsOpen={viewerIsOpen}
-          currentImage={currentImage}
-          closeLightbox={closeLightbox}
-          lightboxSlides={lightboxSlides}
-          thumbnailImageComponent={thumbnailImageComponent}
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           hasMore={hasMore}
-          searchType={searchType}
-          resultsPerPage={resultsPerPage}
-          setResultsPerPage={setResultsPerPage}
         />
       </main>
     </div>

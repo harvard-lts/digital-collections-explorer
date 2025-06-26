@@ -2,10 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { getEmbeddingStats } from '../services/api';
 import './SearchBar.css';
 
-function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef, onImageSearch }) {
-  const [selectedImage, setSelectedImage] = useState(null);
+function SearchBar({
+  inputRef,
+  searchMode,
+  setSearchMode,
+  searchQuery,
+  setSearchQuery,
+  uploadedImage,
+  setUploadedImage,
+  onSearchByText,
+  onSearchByImage,
+}) {
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [searchMode, setSearchMode] = useState('text'); // 'text' or 'image'
   const [embeddingCount, setEmbeddingCount] = useState(null);
 
   useEffect(() => {
@@ -23,10 +31,11 @@ function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef, onImageSea
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
     if (searchMode === 'text') {
-      onSearch(searchQuery);
-    } else if (searchMode === 'image' && selectedImage) {
-      onImageSearch(selectedImage);
+      onSearchByText(searchQuery);
+    } else if (searchMode === 'image' && uploadedImage) {
+      onSearchByImage(uploadedImage);
     }
   };
 
@@ -34,9 +43,9 @@ function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef, onImageSea
     const file = e.target.files[0];
     if (!file) return;
 
-    setSelectedImage(file);
+    setUploadedImage(file);
     
-    // Create a preview URL for the selected image
+    // Create a preview URL for the uploaded image
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewUrl(reader.result);
@@ -45,8 +54,9 @@ function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef, onImageSea
   };
 
   const clearImage = () => {
-    setSelectedImage(null);
+    setUploadedImage(null);
     setPreviewUrl(null);
+
     if (document.getElementById('image-upload')) {
       document.getElementById('image-upload').value = '';
     }
@@ -54,6 +64,7 @@ function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef, onImageSea
 
   const switchMode = (mode) => {
     setSearchMode(mode);
+
     if (mode === 'text') {
       clearImage();
     } else {
@@ -128,7 +139,7 @@ function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef, onImageSea
             <button 
               type="submit" 
               className="search-button"
-              disabled={!selectedImage}
+              disabled={!uploadedImage}
             >
               <span className="search-icon">🔍</span>
               <span className="search-text">Find Similar</span>
