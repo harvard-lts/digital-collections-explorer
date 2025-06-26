@@ -1,5 +1,7 @@
 # Digital Collections Explorer
 
+[![DOI](https://zenodo.org/badge/917426819.svg)](https://zenodo.org/badge/latestdoi/917426819)
+
 A web-based exploratory search system leveraging CLIP (Contrastive Language-Image Pre-training) models for enhanced discovery of digital collections, including maps, photographs, and born-digital documents.
 
 ## Overview
