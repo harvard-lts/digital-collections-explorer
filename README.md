@@ -6,12 +6,9 @@ A web-based exploratory search system leveraging CLIP (Contrastive Language-Imag
 
 ## Overview
 
-This project builds upon the research presented in [Integrating Visual and Textual Inputs for Searching Large-Scale Map Collections with CLIP](https://arxiv.org/abs/2410.01190) by Mahowald and Lee. Their work demonstrates the potential for interactively searching large-scale map collections using:
-- Natural language inputs (e.g., "maps with sea monsters")
-- Visual inputs (reverse image search)
-- Multimodal inputs (e.g., an example map + "more grayscale")
+This project describes out Digital Collections Explorer, available at: [link forthcoming].
 
-Our project extends their work in two main directions:
+Our project extends work on multimodal search of visual collections (such as [Integrating Visual and Textual Inputs for Searching Large-Scale Map Collections with CLIP](https://arxiv.org/abs/2410.01190) by Mahowald and Lee) in two ways:
 
 1. Development of a user-friendly, public-facing web interface for exploratory search
 2. Implementation of advanced fine-tuning techniques for CLIP models specialized in handling digitized and born-digital collections
