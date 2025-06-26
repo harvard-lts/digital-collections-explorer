@@ -1,6 +1,6 @@
 import React from 'react';
 import { Gallery } from 'react-grid-gallery';
-import Pagination from './components/Pagination';
+import Pagination from './Pagination';
 import './SearchResults.css';
 
 const SearchResults = React.memo(({ 
