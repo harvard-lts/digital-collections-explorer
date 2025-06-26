@@ -1,66 +1,9 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Gallery } from "react-grid-gallery";
-import "yet-another-react-lightbox/styles.css";
-import 'react-lazy-load-image-component/src/effects/blur.css';
 import SearchBar from './components/SearchBar';
 import Lightbox from './components/Lightbox';
-import Pagination from './components/Pagination';
+import SearchResults from './components/SearchResults';
 import { searchByText, searchByImage, getImageUrl, getEmbeddingStats } from './services/api';
 import './App.css';
-
-const SearchResults = React.memo(({ 
-  photos,
-  isLoading,
-  error,
-  onClick,
-  currentPage,
-  setCurrentPage,
-  hasMore,
-}) => {
-  if (isLoading) {
-    return (
-      <div className="loading-indicator">
-        <div className="spinner"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="error-message">
-        <p>{error}</p>
-      </div>
-    );
-  }
-
-  if (photos.length > 0) {
-    return (
-      <div className="gallery-container">
-        <Gallery 
-          images={photos}
-          enableImageSelection={false}
-          onClick={(index) => onClick(index)}
-          margin={2}
-          rowHeight={180}
-          targetRowHeight={200}
-          containerWidth={window.innerWidth * 0.95}
-        />
-        <Pagination 
-          currentPage={currentPage} 
-          setCurrentPage={setCurrentPage} 
-          hasMore={hasMore} 
-          isLoading={isLoading}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="welcome-message">
-      <p>Enter a search term or upload a similar image to explore historical maps.</p>
-    </div>
-  );
-});
 
 function App() {
   const [photos, setPhotos] = useState([]);
@@ -71,7 +14,7 @@ function App() {
   const [selectedMap, setSelectedMap] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [uploadedImage, setUploadedImage] = useState(null);
   const [searchMode, setSearchMode] = useState('text'); // 'text' or 'image'
   const [embeddingCount, setEmbeddingCount] = useState(null);
   const resultsPerPage = 50;
@@ -136,8 +79,8 @@ function App() {
   useEffect(() => {
     if (searchMode === 'text' && searchQuery) {
       handleSearchByText(searchQuery);
-    } else if (searchMode === 'image' && selectedImage) {
-      handleSearchByImage(selectedImage);
+    } else if (searchMode === 'image' && uploadedImage) {
+      handleSearchByImage(uploadedImage);
     }
   }, [currentPage]);
 
@@ -159,7 +102,7 @@ function App() {
     setHasMore(false);
 
     if (mode === 'text') {
-      setSelectedImage(null);
+      setUploadedImage(null);
     } else {
       setSearchQuery('');
     }
@@ -174,14 +117,14 @@ function App() {
       
       <main className="App-main">
         <div className="search-controls">
-          <SearchBar 
+          <SearchBar
             inputRef={searchInputRef}
             searchMode={searchMode}
             setSearchMode={handleSearchModeChanged}
-            searchQuery={searchQuery} 
+            searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            selectedImage={selectedImage}
-            setSelectedImage={setSelectedImage}
+            uploadedImage={uploadedImage}
+            setUploadedImage={setUploadedImage}
             onSearchByText={handleSearchByText}
             onSearchByImage={handleSearchByImage}
           />

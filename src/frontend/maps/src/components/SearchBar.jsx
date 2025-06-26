@@ -8,8 +8,8 @@ function SearchBar({
   setSearchMode,
   searchQuery,
   setSearchQuery,
-  selectedImage,
-  setSelectedImage,
+  uploadedImage,
+  setUploadedImage,
   onSearchByText,
   onSearchByImage,
 }) {
@@ -18,8 +18,8 @@ function SearchBar({
     
     if (searchMode === 'text' && searchQuery) {
       onSearchByText(searchQuery);
-    } else if (searchMode === 'image' && selectedImage) {
-      onSearchByImage(selectedImage);
+    } else if (searchMode === 'image' && uploadedImage) {
+      onSearchByImage(uploadedImage);
     }
   };
 
@@ -62,13 +62,13 @@ function SearchBar({
         ) : (
           <div className="image-search-container">
             <ImageUpload 
-              selectedImage={selectedImage}
-              setSelectedImage={setSelectedImage}
+              uploadedImage={uploadedImage}
+              setUploadedImage={setUploadedImage}
             />
             <button 
               type="submit" 
               className="search-button"
-              disabled={!selectedImage}
+              disabled={!uploadedImage}
             >
               <span className="search-icon">🔍</span>
               <span className="search-text">Find Similar</span>

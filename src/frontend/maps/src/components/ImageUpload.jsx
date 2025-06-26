@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 
-function ImageUpload({ selectedImage, setSelectedImage }) {
+function ImageUpload({ uploadedImage, setUploadedImage }) {
   const [previewUrl, setPreviewUrl] = useState(null);
 
   useEffect(() => {
-    if (!selectedImage) {
+    if (!uploadedImage) {
       setPreviewUrl(null);
     }
-  }, [selectedImage]);
+  }, [uploadedImage]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setSelectedImage(file);
+    setUploadedImage(file);
     
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -33,7 +33,7 @@ function ImageUpload({ selectedImage, setSelectedImage }) {
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      setSelectedImage(file);
+      setUploadedImage(file);
       
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -78,7 +78,7 @@ function ImageUpload({ selectedImage, setSelectedImage }) {
         <button 
           className="clear-button"
           onClick={() => {
-            setSelectedImage(null);
+            setUploadedImage(null);
             document.getElementById('image-upload').value = '';
           }}
         >
