@@ -17,40 +17,10 @@ export const searchByText = async (query, limit = 50, page = 1) => {
     }
     
     const { results } = await response.json();
-    
-    return results.map(item => ({
-      id: item.id,
-      file_path: item.file_path,
-      file_name: item.file_name,
-      similarity: item.score,
-      metadata: {
-        title: item.file_name,
-        path: item.file_path,
-      }
-    }));
+    return results;
   } catch (error) {
     console.error('Error searching photos:', error);
     throw error;
-  }
-};
-
-/**
- * Get statistics about embeddings (total count)
- * @returns {Promise<Object>} - Statistics object with count property
- */
-export const getEmbeddingStats = async () => {
-  try {
-    const response = await fetch(`${API_URL}/api/embeddings/count`);
-    
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching embedding stats:', error);
-    return { count: 0 };
   }
 };
 
@@ -77,10 +47,30 @@ export const searchByImage = async (image, limit = 50, page = 1) => {
       throw new Error(`API error: ${response.status}`);
     }
     
-    const data = await response.json();
-    return data;
+    const { results } = await response.json();
+    return results;
   } catch (error) {
     console.error('Error in image search:', error);
     throw error;
+  }
+};
+
+/**
+ * Get statistics about embeddings (total count)
+ * @returns {Promise<Object>} - Statistics object with count property
+ */
+export const getEmbeddingStats = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/embeddings/count`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching embedding stats:', error);
+    return { count: 0 };
   }
 };
