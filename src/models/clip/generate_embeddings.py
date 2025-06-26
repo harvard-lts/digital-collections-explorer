@@ -9,6 +9,7 @@ from PIL import Image
 from dataclasses import dataclass
 from typing import Dict, Any
 import PyPDF2
+import base64
 
 from transformers import CLIPProcessor, CLIPModel
 from src.backend.core.config import settings
@@ -21,22 +22,12 @@ class ProcessingResult:
     """Class for storing processing results"""
     embeddings: Dict[str, torch.Tensor]
     metadata: Dict[str, Dict[str, Any]]
-    skipped_files: int
+    skipped_items_count: int
+    failed_items_count: int
 
-def resize_image_proportionally(image: Image.Image, max_size: int = 1920) -> Image.Image:
-    """Resize an image proportionally if it exceeds the maximum size"""
-    width, height = image.size
-    
-    if width > max_size or height > max_size:
-        scale_ratio = min(max_size / width, max_size / height)
-        new_width = int(width * scale_ratio)
-        new_height = int(height * scale_ratio)
-        return image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-    
-    return image
-
-def generate_embeddings(model, processor, images, device="cuda"):
+def generate_embeddings(model, processor, images, device="cuda", timing_info: Dict[str, float] = None):
     """Generate embeddings for a list of images"""
+    start_time = time.time()
     try:
         inputs = processor(images=images, return_tensors="pt", padding=True)
         inputs = {k: v.to(device) for k, v in inputs.items()}
@@ -49,8 +40,12 @@ def generate_embeddings(model, processor, images, device="cuda"):
     except Exception as e:
         logger.error(f"Error generating embeddings: {e}")
         return None
+    finally:
+        if timing_info is not None:
+            end_time = time.time()
+            timing_info['total_duration'] += end_time - start_time
 
-def process_pdf(file_path, model, processor, device, processed_dir, thumbnails_dir):
+def process_pdf(file_path, raw_data_dir, model, processor, device, processed_dir, thumbnails_dir, timing_info: Dict[str, float]):
     """Process a PDF file and generate embeddings for each page"""
     try:
         file_path = Path(file_path)
@@ -90,13 +85,14 @@ def process_pdf(file_path, model, processor, device, processed_dir, thumbnails_d
                 thumbnail = image.copy()
                 thumbnail.thumbnail((400, 400), Image.Resampling.LANCZOS)
                 thumbnail_path = pdf_thumbnails_dir / f"{i}.jpg"
-                thumbnail.save(thumbnail_path, "JPEG", quality=85)
+                thumbnail.save(thumbnail_path, "JPEG", quality=80)
                 
+                processed_image = image.copy()
+                processed_image.thumbnail((1920, 1920), Image.Resampling.LANCZOS)
                 processed_image_path = pdf_processed_dir / f"{i}.jpg"
-                processed_image = resize_image_proportionally(image.copy())
                 processed_image.save(processed_image_path, "JPEG", quality=90)
                 
-                page_embedding = generate_embeddings(model, processor, [image], device)
+                page_embedding = generate_embeddings(model, processor, [image], device, timing_info)
                 if page_embedding is not None:
                     embeddings_list.append(page_embedding[0])  # Extract the embedding vector
                     processed_pages.append(i)
@@ -112,7 +108,9 @@ def process_pdf(file_path, model, processor, device, processed_dir, thumbnails_d
         # Return a list of (item_id, embedding, metadata) tuples
         results = []
         for i, embedding in zip(processed_pages, embeddings_list):
-            item_id = f"{file_path.name}_{i}"
+            relative_path_str = str(file_path.relative_to(raw_data_dir))
+            encoded_id = base64.urlsafe_b64encode(relative_path_str.encode('utf-8')).decode('utf-8').rstrip("=")
+            item_id = f"{encoded_id}_{i}"
             metadata = {
                 'file_name': file_path.name,
                 'type': 'pdf_page',
@@ -131,7 +129,7 @@ def process_pdf(file_path, model, processor, device, processed_dir, thumbnails_d
         logger.error(f"Error processing PDF {file_path}: {e}")
         return None
 
-def process_image(file_path, model, processor, device, processed_dir, thumbnails_dir):
+def process_image(file_path, raw_data_dir, model, processor, device, processed_dir, thumbnails_dir, timing_info: Dict[str, float]):
     """Process an image file and generate its embedding"""
     try:
         file_path = Path(file_path)
@@ -140,18 +138,22 @@ def process_image(file_path, model, processor, device, processed_dir, thumbnails
         thumbnail = image.copy()
         thumbnail.thumbnail((400, 400), Image.Resampling.LANCZOS)
         thumbnail_path = thumbnails_dir / f"{file_path.stem}.jpg"
-        thumbnail.save(thumbnail_path, "JPEG", quality=85)
+        thumbnail.save(thumbnail_path, "JPEG", quality=80)
         
-        processed_image = resize_image_proportionally(image.copy())
+        processed_image = image.copy()
+        processed_image.thumbnail((1920, 1920), Image.Resampling.LANCZOS)
         
         image_processed_dir = processed_dir / file_path.stem
         image_processed_dir.mkdir(parents=True, exist_ok=True)
         processed_image_path = image_processed_dir / "0.jpg"
         processed_image.save(processed_image_path, "JPEG", quality=90)
         
-        embedding = generate_embeddings(model, processor, [image], device)
+        embedding = generate_embeddings(model, processor, [image], device, timing_info)
         if embedding is None:
             return None
+        
+        relative_path_str = str(file_path.relative_to(raw_data_dir))
+        item_id = base64.urlsafe_b64encode(relative_path_str.encode('utf-8')).decode('utf-8').rstrip("=")
         
         metadata = {
             'file_name': file_path.name,
@@ -163,7 +165,7 @@ def process_image(file_path, model, processor, device, processed_dir, thumbnails
             }
         }
         
-        return [(file_path.name, embedding[0], metadata)]
+        return [(item_id, embedding[0], metadata)]
     except Exception as e:
         logger.error(f"Error processing image {file_path}: {e}")
         return None
@@ -173,57 +175,62 @@ def process_files(model: Any,
                  device: str, 
                  raw_data_dir: Path, 
                  processed_dir: Path,
-                 thumbnails_dir: Path) -> ProcessingResult:
+                 thumbnails_dir: Path,
+                 timing_info: Dict[str, float]) -> ProcessingResult:
     """Process all files in the raw data directory"""
     logger.info(f"Looking for files in {raw_data_dir}")
-    
+
     supported_extensions = {
-        'pdf': [],
+        'pdf': ['pdf'],
         'image': ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp']
     }
     
-    files = []
-    pdf_files = []
-    image_files = []
-    
+    files_to_process = []
+    skipped_items_count = 0
+    failed_items_count = 0
+
     for file_path in raw_data_dir.glob("**/*"):
         if file_path.is_file():
             ext = file_path.suffix.lower().lstrip('.')
-            if ext == 'pdf':
-                pdf_files.append(file_path)
-                files.append(file_path)
-            elif ext in supported_extensions['image']:
-                image_files.append(file_path)
-                files.append(file_path)
+            is_image = ext in supported_extensions['image']
+            is_pdf = ext in supported_extensions['pdf']
+
+            if is_image or is_pdf and settings.collection_type != 'photographs':
+                files_to_process.append(file_path)
+            else:
+                skipped_items_count += 1
     
-    logger.info(f"Found {len(files)} files (PDFs: {len(pdf_files)}, Images: {len(image_files)})")
+    logger.info(f"Found {len(files_to_process)} eligible files to process.")
     
-    if not files:
+    if not files_to_process:
         logger.warning(f"No files found in {raw_data_dir}")
-        return ProcessingResult({}, {}, 0)
+        return ProcessingResult({}, {}, skipped_items_count, failed_items_count)
     
     embeddings = {}
     metadata = {}
-    skipped_files = 0
     
-    for file_path in files:
+    for file_path in files_to_process:
         try:
-            if file_path.suffix.lower() == '.pdf':
-                results = process_pdf(file_path, model, processor, device, processed_dir, thumbnails_dir)
-            else:
-                results = process_image(file_path, model, processor, device, processed_dir, thumbnails_dir)
+            ext = file_path.suffix.lower().lstrip('.')
+            is_image = ext in supported_extensions['image']
+            is_pdf = ext in supported_extensions['pdf']
+
+            if is_pdf:
+                results = process_pdf(file_path, raw_data_dir, model, processor, device, processed_dir, thumbnails_dir, timing_info)
+            elif is_image:
+                results = process_image(file_path, raw_data_dir, model, processor, device, processed_dir, thumbnails_dir, timing_info)
             
             if results:
                 for item_id, embedding, metadata_item in results:
                     embeddings[item_id] = embedding
                     metadata[item_id] = metadata_item
             else:
-                skipped_files += 1
+                failed_items_count += 1
         except Exception as e:
             logger.error(f"Error processing {file_path}: {e}")
-            skipped_files += 1
+            failed_items_count += 1
     
-    return ProcessingResult(embeddings, metadata, skipped_files)
+    return ProcessingResult(embeddings, metadata, skipped_items_count, failed_items_count)
 
 def main():
     start_time = time.time()
@@ -249,7 +256,9 @@ def main():
     model = CLIPModel.from_pretrained(MODEL_ID).to(DEVICE)
     processor = CLIPProcessor.from_pretrained(MODEL_ID)
     
-    result = process_files(model, processor, DEVICE, RAW_DATA_DIR, PROCESSED_DIR, THUMBNAILS_DIR)
+    embedding_timing_info = {'total_duration': 0.0}
+    
+    result = process_files(model, processor, DEVICE, RAW_DATA_DIR, PROCESSED_DIR, THUMBNAILS_DIR, embedding_timing_info)
     
     embeddings_file = EMBEDDINGS_DIR / "embeddings.pt"
     item_ids_file = EMBEDDINGS_DIR / "item_ids.pt"
@@ -266,12 +275,15 @@ def main():
     logger.info(f"Saved {len(item_ids)} embeddings to {embeddings_file}")
     logger.info(f"Saved {len(item_ids)} item IDs to {item_ids_file}")
     logger.info(f"Saved metadata to {metadata_file}")
-    logger.info(f"Skipped {result.skipped_files} files")
+    logger.info(f"Processing skipped {result.skipped_items_count} files due to incompatibility or ineligibility, and encountered {result.failed_items_count} processing failures.")
 
     end_time = time.time()
     total_time = end_time - start_time
-    formatted_time = time.strftime('%H:%M:%S', time.gmtime(total_time))
-    logger.info(f"Total processing time: {formatted_time}")
+    formatted_total_time = time.strftime('%H:%M:%S', time.gmtime(total_time))
+    logger.info(f"Total processing time: {formatted_total_time}")
+
+    formatted_embedding_time = time.strftime('%H:%M:%S', time.gmtime(embedding_timing_info['total_duration']))
+    logger.info(f"Total time spent on embedding generation: {formatted_embedding_time}")
 
 if __name__ == "__main__":
     main()
