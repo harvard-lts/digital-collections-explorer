@@ -31,4 +31,4 @@ function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef }) {
   );
 }
 
-export default SearchBar; 
+export default SearchBar;

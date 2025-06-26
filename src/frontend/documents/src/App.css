@@ -118,15 +118,6 @@ button:hover {
   background-color: transparent !important;
 }
 
-.historical-image {
-  filter: sepia(20%);
-  transition: filter 0.3s ease;
-}
-
-.historical-image:hover {
-  filter: sepia(0%);
-}
-
 .custom-overlay {
   position: absolute;
   bottom: 0;

@@ -19,7 +19,6 @@
   position: relative;
 }
 
-/* Header controls */
 .pdf-viewer-controls {
   display: flex;
   justify-content: space-between;
@@ -72,7 +71,6 @@
   margin: 0 auto;
 }
 
-/* Main content area */
 .pdf-viewer-content {
   flex: 1;
   display: flex;
@@ -81,7 +79,6 @@
   background: linear-gradient(to bottom, rgba(30, 30, 30, 0.7), rgba(15, 15, 15, 0.9));
 }
 
-/* Navigation buttons */
 .pdf-navigation {
   display: flex;
   align-items: center;
@@ -115,7 +112,6 @@
   cursor: not-allowed;
 }
 
-/* PDF page display */
 .pdf-page-container {
   flex: 1;
   display: flex;
@@ -144,7 +140,6 @@
   transition: transform 0.3s ease;
 }
 
-/* Footer area */
 .pdf-viewer-footer {
   padding: 18px;
   background-color: var(--viewer-footer-bg);
@@ -154,7 +149,6 @@
   border-top: 1px solid var(--viewer-border);
 }
 
-/* Metadata Display (formerly PhotoInfo) */
 .pdf-metadata {
   flex: 2;
   text-align: left;
@@ -196,7 +190,6 @@
   color: var(--viewer-text);
 }
 
-/* Download button area */
 .pdf-action-buttons {
   flex: 1;
   display: flex;
