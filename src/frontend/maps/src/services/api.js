@@ -1,7 +1,7 @@
 const API_URL = import.meta.env.API_BASE_URL;
 
-export const getIiifInfo = async (iiif_id) => {
-  const url = `https://tile.loc.gov/image-services/iiif/${iiif_id}/info.json`;
+export const getIiifInfo = async (iiifId) => {
+  const url = `https://tile.loc.gov/image-services/iiif/${iiifId}/info.json`;
 
   try {
     const response = await fetch(url);
@@ -11,23 +11,25 @@ export const getIiifInfo = async (iiif_id) => {
     }
     return await response.json();
   } catch (error) {
-    console.error(`Failed to fetch IIIF info for ${iiif_id}:`, error);
+    console.error(`Failed to fetch IIIF info for ${iiifId}:`, error);
     throw error;
   }
 };
 
-export const getLocInfo = async (loc_item_url) => {
-  const url = `${loc_item_url}?fo=json`;
-
+export const getLocInfo = async (locItemUrl) => {
   try {
-    const response = await fetch(url);
+    const urlObject = new URL(locItemUrl);
+    urlObject.protocol = 'https';
+    urlObject.searchParams.set('fo', 'json');
+
+    const response = await fetch(urlObject.href);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return await response.json();
   } catch (error) {
-    console.error(`Failed to fetch LOC info for ${loc_item_url}:`, error);
+    console.error(`Failed to process or fetch LOC info for ${locItemUrl}:`, error);
     throw error;
   }
 };
