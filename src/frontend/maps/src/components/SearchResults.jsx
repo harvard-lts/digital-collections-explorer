@@ -4,7 +4,7 @@ import Pagination from './Pagination';
 import './SearchResults.css';
 
 const SearchResults = React.memo(({ 
-  photos,
+  items,
   isLoading,
   error,
   onClick,
@@ -28,13 +28,13 @@ const SearchResults = React.memo(({
     );
   }
 
-  if (photos.length > 0) {
+  if (items.length > 0) {
     return (
       <div className="gallery-container">
         <Gallery 
-          images={photos}
+          images={items}
           enableImageSelection={false}
-          onClick={(index) => onClick(index)}
+          onClick={(index) => onClick(items[index])}
           margin={2}
           rowHeight={180}
           targetRowHeight={200}

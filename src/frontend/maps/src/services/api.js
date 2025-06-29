@@ -1,11 +1,37 @@
 const API_URL = import.meta.env.API_BASE_URL;
 
-export const getImageUrl = (documentId, size) => {
-  if (!documentId) return '';
-  if (size) {
-    return `${API_URL}/images/${encodeURIComponent(documentId)}?size=${size}`;
+export const getIiifInfo = async (iiifId) => {
+  const url = `https://tile.loc.gov/image-services/iiif/${iiifId}/info.json`;
+
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to fetch IIIF info for ${iiifId}:`, error);
+    throw error;
   }
-  return `${API_URL}/images/${encodeURIComponent(documentId)}`;
+};
+
+export const getLocInfo = async (locItemUrl) => {
+  try {
+    const urlObject = new URL(locItemUrl);
+    urlObject.protocol = 'https';
+    urlObject.searchParams.set('fo', 'json');
+
+    const response = await fetch(urlObject.href);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to process or fetch LOC info for ${locItemUrl}:`, error);
+    throw error;
+  }
 };
 
 /**

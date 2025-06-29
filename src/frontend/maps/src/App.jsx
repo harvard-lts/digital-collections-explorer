@@ -2,11 +2,11 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import SearchBar from './components/SearchBar';
 import Lightbox from './components/Lightbox';
 import SearchResults from './components/SearchResults';
-import { searchByText, searchByImage, getImageUrl, getEmbeddingStats } from './services/api';
+import { searchByText, searchByImage, getEmbeddingStats, getIiifInfo } from './services/api';
 import './App.css';
 
 function App() {
-  const [photos, setPhotos] = useState([]);
+  const [maps, setMaps] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -32,9 +32,9 @@ function App() {
     fetchEmbeddingStats();
   }, []);
 
-  const formatPhotosForGallery = (results) => {
+  const formatItemsForGallery = (results) => {
     return results.map(result => ({
-      src: getImageUrl(result.id, 200),
+      src: result.metadata.paths.thumbnail,
       width: 200,
       height: 150,
       alt: result.file_name,
@@ -50,7 +50,7 @@ function App() {
     
     try {
       const results = await searchByText(query, resultsPerPage, currentPage);
-      setPhotos(formatPhotosForGallery(results));
+      setMaps(formatItemsForGallery(results));
       setHasMore(results.length >= resultsPerPage);
     } catch (error) {
       console.error('Error performing search:', error);
@@ -66,7 +66,7 @@ function App() {
     
     try {
       const results = await searchByImage(image, resultsPerPage, currentPage);
-      setPhotos(formatPhotosForGallery(results));
+      setMaps(formatItemsForGallery(results));
       setHasMore(results.length >= resultsPerPage);
     } catch (error) {
       console.error('Error performing search:', error);
@@ -84,21 +84,28 @@ function App() {
     }
   }, [currentPage]);
 
-  const handleLightboxOpened = useCallback((index) => {
-    const selectedItem = photos[index].originalData;
-    const imageUrl = getImageUrl(selectedItem.id, 1600);
+  const handleLightboxOpened = useCallback(async (selectedMap) => {
+    try {
+      const iiifInfo = await getIiifInfo(selectedMap.originalData.metadata.iiif_id);
 
-    setSelectedMap(imageUrl);
-  }, [photos]);
+      setSelectedMap({
+        ...selectedMap.originalData,
+        iiifInfo: iiifInfo
+      });
+    } catch (error) {
+      console.error("Failed to get IIIF info:", error);
+      setError('Failed to get IIIF info from Library of Congress\'s API. Please try again.');
+    }
+  }, [setSelectedMap]);
 
   const handleLightboxClosed = useCallback(() => {
     setSelectedMap(null);
-  }, []);
+  }, [setSelectedMap]);
 
   const handleSearchModeChanged = useCallback((mode) => {
     setSearchMode(mode);
     setCurrentPage(1);
-    setPhotos([]);
+    setMaps([]);
     setHasMore(false);
 
     if (mode === 'text') {
@@ -135,7 +142,7 @@ function App() {
           </p>
         )}
         <SearchResults 
-          photos={photos}
+          items={maps}
           isLoading={isLoading}
           error={error}
           onClick={handleLightboxOpened}
@@ -147,7 +154,7 @@ function App() {
 
       <Lightbox
         isVisible={!!selectedMap}
-        imageUrl={selectedMap}
+        data={selectedMap}
         onBack={handleLightboxClosed}
       />
     </div>

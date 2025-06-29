@@ -57,11 +57,9 @@ class EmbeddingService:
                 logger.info("Embeddings loaded successfully")
             else:
                 if not embeddings_path.exists():
-                    logger.warning(f"Embeddings file not found at {embeddings_path}")
+                    logger.error(f"Embeddings file not found at {embeddings_path}")
                 if not item_ids_path.exists():
-                    logger.warning(f"Item IDs file not found at {item_ids_path}")
-                    
-                logger.error("Failed to load embeddings: files not found")
+                    logger.error(f"Item IDs file not found at {item_ids_path}")
         except Exception as e:
             logger.error(f"Error loading embeddings: {str(e)}")
             logger.error(traceback.format_exc())
