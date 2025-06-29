@@ -1,16 +1,35 @@
 const API_URL = import.meta.env.API_BASE_URL;
 
-/**
- * Library of Congress image URL processing adaptation
- */
-export const getImageUrl = (url, size = 'full') => {
-  const sizeParam = typeof size === 'string' ? size : `${size},`;
-  const urlParts = url.split('/');
-  const iiifIndex = urlParts.findIndex(part => part === 'iiif');
-  const identifier = iiifIndex !== -1 ? urlParts.slice(iiifIndex + 1, -4).join('/') : '';
-  const baseUrl = `https://tile.loc.gov/image-services/iiif/${identifier}`;
-  
-  return `${baseUrl}/full/${sizeParam}/0/default.jpg`;
+export const getIiifInfo = async (iiif_id) => {
+  const url = `https://tile.loc.gov/image-services/iiif/${iiif_id}/info.json`;
+
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to fetch IIIF info for ${iiif_id}:`, error);
+    throw error;
+  }
+};
+
+export const getLocInfo = async (loc_item_url) => {
+  const url = `${loc_item_url}?fo=json`;
+
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to fetch LOC info for ${loc_item_url}:`, error);
+    throw error;
+  }
 };
 
 /**

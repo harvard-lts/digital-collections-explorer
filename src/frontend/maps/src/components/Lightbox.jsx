@@ -1,27 +1,27 @@
 import React, { useRef, useEffect, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
+import { getLocInfo } from '../services/api';
 import './Lightbox.css';
 
-const Lightbox = React.memo(({ imageUrl, onBack, isVisible }) => {
+const Lightbox = React.memo(({ data, onBack, isVisible }) => {
   const viewerRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isViewerLoading, setIsViewerLoading] = useState(true);
+  const [isMapInfoLoading, setIsMapInfoLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mapTitle, setMapTitle] = useState('');
 
   useEffect(() => {
     if (!isVisible || !viewerRef.current) {
       return;
     }
 
-    setIsLoading(true);
+    setIsViewerLoading(true);
     setError(null);
 
     const viewer = OpenSeadragon({
       element: viewerRef.current,
       prefixUrl: 'https://openseadragon.github.io/openseadragon/images/',
-      tileSources: {
-        type: 'image',
-        url: imageUrl
-      },
+      tileSources: data.iiifInfo,
       showNavigator: true,
       minZoomLevel: 0.1,
       defaultZoomLevel: 0.5,
@@ -29,28 +29,38 @@ const Lightbox = React.memo(({ imageUrl, onBack, isVisible }) => {
     });
 
     viewer.addHandler('open', () => {
-      setIsLoading(false);
+      setIsViewerLoading(false);
     });
 
     viewer.addHandler('open-failed', () => {
       setError('Failed to load image');
-      setIsLoading(false);
+      setIsViewerLoading(false);
     });
 
     return () => {
       viewer.destroy();
     };
-  }, [imageUrl, isVisible]);
+  }, [data, isVisible]);
 
   useEffect(() => {
-    if (!isLoading) return;
+    if (!data) return;
 
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 5000);
-
-    return () => clearTimeout(timeoutId);
-  }, [isLoading]);
+    setIsMapInfoLoading(true);
+    setMapTitle('');
+    
+    try {
+      const fetchLocInfo = async () => {
+        const locInfo = await getLocInfo(data.metadata.url);
+        setMapTitle(locInfo?.item?.title || 'Untitled');
+        setIsMapInfoLoading(false);
+      };
+      fetchLocInfo();
+    } catch (error) {
+      console.error('Failed to fetch LOC info:', error);
+      setError('Failed to get map\'s info from Library of Congress\'s API. Please try again.');
+      setIsMapInfoLoading(false);
+    }
+  }, [data]);
 
   return (
     <div className={`lightbox-overlay ${isVisible ? 'visible' : ''}`}>
@@ -59,19 +69,37 @@ const Lightbox = React.memo(({ imageUrl, onBack, isVisible }) => {
           Back to results
         </button>
         <div className="tile-gallery-viewer" ref={viewerRef}>
-          {isLoading && isVisible && (
+          {isVisible && isViewerLoading &&(
             <div className="lightbox-loading">
               <div className="lightbox-spinner" />
               <p>Loading map...</p>
             </div>
           )}
-          {error && isVisible && (
+          {isVisible && error && (
             <div className="lightbox-error">
               <div className="lightbox-error-icon">⚠️</div>
               <p>{error}</p>
             </div>
           )}
         </div>
+        {data && (
+          <div className="lightbox-info-overlay">
+            <h3 className="lightbox-title">
+              {
+                isMapInfoLoading ? (
+                  <span>Loading map's info...</span>
+                ) : (
+                  <span>{mapTitle}</span>
+                )
+              }
+            </h3>            
+            {data?.metadata?.url && (
+              <a href={data.metadata.url} target="_blank" rel="noopener noreferrer" className="lightbox-source-link">
+                View at Library of Congress
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
