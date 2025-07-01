@@ -12,7 +12,6 @@ const PDFPreviewCard = ({ metadata, src, alt, onClick }) => {
           effect="blur"
           src={src}
           width="100%"
-          placeholderSrc='https://placehold.co/300x200'
         />
       </div>
       
