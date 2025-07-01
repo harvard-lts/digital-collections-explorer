@@ -3,7 +3,7 @@ import { Gallery } from 'react-grid-gallery';
 import Pagination from './Pagination';
 import './SearchResults.css';
 
-const SearchResults = React.memo(({ 
+const SearchResults = React.memo(({
   items,
   isLoading,
   error,
@@ -27,32 +27,27 @@ const SearchResults = React.memo(({
       </div>
     );
   }
-
-  if (items.length > 0) {
-    return (
-      <div className="gallery-container">
-        <Gallery 
-          images={items}
-          enableImageSelection={false}
-          onClick={(index) => onClick(items[index])}
-          margin={2}
-          rowHeight={180}
-          targetRowHeight={200}
-          containerWidth={window.innerWidth * 0.95}
-        />
-        <Pagination 
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          hasMore={hasMore}
-          isLoading={isLoading}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="welcome-message">
-      <p>Enter a search term or upload a similar image to explore historical maps.</p>
+    <div className="gallery-container">
+      {
+        items.length > 0 && (
+          <>
+            <Gallery
+              images={items}
+              enableImageSelection={false}
+              onClick={(index) => onClick(items[index])}
+              margin={0}
+              rowHeight={220}
+            />
+            <Pagination
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              hasMore={hasMore}
+              isLoading={isLoading}
+            />
+          </>
+        )
+      }
     </div>
   );
 });

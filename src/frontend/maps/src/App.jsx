@@ -121,7 +121,6 @@ function App() {
         <h1>Historical Maps Explorer</h1>
         <p>Explore maps using natural language search</p>
       </header>
-      
       <main className="App-main">
         <div className="search-controls">
           <SearchBar
@@ -136,11 +135,6 @@ function App() {
             onSearchByImage={handleSearchByImage}
           />
         </div>
-        {embeddingCount !== null && (
-          <p className="embedding-count">
-            Total number of maps in the collection: {embeddingCount.toLocaleString()}
-          </p>
-        )}
         <SearchResults 
           items={maps}
           isLoading={isLoading}
@@ -150,8 +144,17 @@ function App() {
           setCurrentPage={setCurrentPage}
           hasMore={hasMore}
         />
+        {
+          maps.length === 0 && embeddingCount !== null && (
+            <div className="welcome-message">
+              <p>
+                Enter a search term or upload a similar image to discover matches
+                from our collection of {embeddingCount.toLocaleString()} maps.
+              </p>
+            </div>
+          )
+        }
       </main>
-
       <Lightbox
         isVisible={!!selectedMap}
         data={selectedMap}

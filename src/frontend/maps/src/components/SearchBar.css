@@ -51,13 +51,6 @@
   font-size: 1.2rem;
 }
 
-.search-suggestions {
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-  color: #b0b0b0;
-  font-style: italic;
-}
-
 .search-mode-selector {
   display: flex;
   margin-bottom: 1rem;
