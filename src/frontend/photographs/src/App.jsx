@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import SearchBar from './components/SearchBar';
 import { ResultsPerPageDropdown } from './components/Pagination';
 import SearchResults from './components/SearchResults';
-import { searchByText, searchByImage } from './services/api';
+import { searchByText, searchByImage, getEmbeddingStats } from './services/api';
 import './App.css';
 
 function App() {
@@ -16,6 +16,20 @@ function App() {
   const [hasMore, setHasMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [resultsPerPage, setResultsPerPage] = useState(50);
+  const [embeddingCount, setEmbeddingCount] = useState(null);
+
+  useEffect(() => {
+    const fetchEmbeddingStats = async () => {
+      try {
+        const stats = await getEmbeddingStats();
+        setEmbeddingCount(stats.count);
+      } catch (error) {
+        console.error('Failed to load embedding stats:', error);
+      }
+    };
+
+    fetchEmbeddingStats();
+  }, []);
 
   const formatPhotosForGallery = (results) => {
     return results.map(result => ({
@@ -127,6 +141,16 @@ function App() {
           setCurrentPage={setCurrentPage}
           hasMore={hasMore}
         />
+        {
+          photos.length === 0 && embeddingCount !== null && (
+            <div className="welcome-message">
+              <p>
+                Enter a search term or upload a similar image to discover matches
+                from our collection of {embeddingCount.toLocaleString()} photographs.
+              </p>
+            </div>
+          )
+        }
       </main>
     </div>
   );

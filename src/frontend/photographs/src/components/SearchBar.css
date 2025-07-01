@@ -32,6 +32,10 @@
 }
 
 .search-bar .search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background-color: #8b5a2b;
   color: white;
   border: none;
@@ -39,7 +43,6 @@
   font-size: 1rem;
   cursor: pointer;
   border-radius: 4px;
-  font-family: 'Lato', sans-serif;
   transition: background-color 0.2s ease;
 }
 
@@ -188,10 +191,6 @@
 .clear-image-button:hover {
   background-color: rgba(0, 0, 0, 0.8);
   color: #fff;
-}
-
-.embedding-count {
-  margin-top: 8px;
 }
 
 @media (max-width: 600px) {
