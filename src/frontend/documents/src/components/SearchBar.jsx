@@ -24,9 +24,6 @@ function SearchBar({ searchQuery, setSearchQuery, onSearch, inputRef }) {
           <span className="search-text">Search</span>
         </button>
       </form>
-      <div className="search-suggestions">
-        <p>Try: "city streets" • "rural landscapes" • "women in uniform" • "symbol of capitalization"</p>
-      </div>
     </div>
   );
 }

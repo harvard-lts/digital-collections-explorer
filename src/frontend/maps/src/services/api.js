@@ -118,6 +118,6 @@ export const getEmbeddingStats = async () => {
     return data;
   } catch (error) {
     console.error('Error fetching embedding stats:', error);
-    return { count: 0 };
+    throw error;
   }
 };

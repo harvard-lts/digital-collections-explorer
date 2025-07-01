@@ -58,7 +58,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.historical-image:hover + .custom-overlay,
+.custom-overlay,
 .custom-overlay:hover {
   opacity: 1;
 }
@@ -83,13 +83,4 @@
   box-shadow: none !important;
   border: none !important;
   background-color: transparent !important;
-}
-
-.historical-image {
-  filter: sepia(20%);
-  transition: filter 0.3s ease;
-}
-
-.historical-image:hover {
-  filter: sepia(0%);
 }

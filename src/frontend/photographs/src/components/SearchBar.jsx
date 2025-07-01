@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { getEmbeddingStats } from '../services/api';
+import React, { useState } from 'react';
 import './SearchBar.css';
 
 function SearchBar({
@@ -14,20 +13,6 @@ function SearchBar({
   onSearchByImage,
 }) {
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [embeddingCount, setEmbeddingCount] = useState(null);
-
-  useEffect(() => {
-    const fetchEmbeddingStats = async () => {
-      try {
-        const stats = await getEmbeddingStats();
-        setEmbeddingCount(stats.count);
-      } catch (error) {
-        console.error('Failed to load embedding stats:', error);
-      }
-    };
-
-    fetchEmbeddingStats();
-  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -151,13 +136,8 @@ function SearchBar({
       {searchMode === 'text' && (
         <div className="search-suggestions">
           <p>
-            Try searching for: "city streets", "rural landscapes", "women in uniform", or "symbol of capitalization"
+            Try searching for: "city streets" or "people in uniform"
           </p>
-          {embeddingCount !== null && (
-            <p className="embedding-count">
-              to discover matches from our collection of {embeddingCount.toLocaleString()} historical photographs
-            </p>
-          )}
         </div>
       )}
     </div>

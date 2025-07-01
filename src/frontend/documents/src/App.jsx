@@ -45,8 +45,7 @@ const SearchResults = React.memo(({
 
   return (
     <div className="welcome-message">
-      <p>Enter a search term to explore documents.</p>
-      <p>Try searching for subjects, time periods, locations, or visual elements.</p>
+      <p>Enter a search term or upload a similar image to explore documents.</p>
     </div>
   );
 });
