@@ -6,12 +6,11 @@ A web-based exploratory search system leveraging CLIP (Contrastive Language-Imag
 
 ## Overview
 
-This project describes out Digital Collections Explorer, available at: [link forthcoming].
+This project describes out Digital Collections Explorer, available at: [https://arxiv.org/abs/2507.00961](https://arxiv.org/abs/2507.00961).
 
-Our project extends work on multimodal search of visual collections (such as [Integrating Visual and Textual Inputs for Searching Large-Scale Map Collections with CLIP](https://arxiv.org/abs/2410.01190) by Mahowald and Lee) in two ways:
+![A diagram showing an overview of our Digital Collections Explorer, including its various components.](https://github.com/hinxcode/digital-collections-explorer/blob/main/overview.png)
 
-1. Development of a user-friendly, public-facing web interface for exploratory search
-2. Implementation of advanced fine-tuning techniques for CLIP models specialized in handling digitized and born-digital collections
+We present Digital Collections Explorer, a web-based, open-source exploratory search platform that leverages CLIP (Contrastive Language-Image Pre-training) for enhanced visual discovery of digital collections. Our Digital Collections Explorer can be installed locally and configured to run on a visual collection of interest on disk in just a few steps. Building upon recent advances in multimodal search techniques, our interface enables natural language queries and reverse image searches over digital collections with visual features. An overview of our system can be seen in the image above.
 
 ## Features
 
