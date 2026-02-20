@@ -14,6 +14,7 @@ from PIL import Image
 from transformers import CLIPModel, CLIPProcessor
 
 from src.backend.core.config import settings
+from src.backend.utils.helpers import extract_embeddings
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -41,7 +42,8 @@ def generate_embeddings(
         inputs = {k: v.to(device) for k, v in inputs.items()}
 
         with torch.no_grad():
-            embeddings = model.get_image_features(**inputs)
+            image_features = model.get_image_features(**inputs)
+            embeddings = extract_embeddings(image_features)
             embeddings = embeddings / embeddings.norm(dim=-1, keepdim=True)
 
         return embeddings.cpu()
