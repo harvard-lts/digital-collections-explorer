@@ -4,6 +4,7 @@ import torch
 from transformers import CLIPModel, CLIPProcessor
 
 from ..core.config import settings
+from ..utils.helpers import extract_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +40,10 @@ class CLIPService:
 
         with torch.no_grad():
             text_features = self.model.get_text_features(**text_inputs)
-            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+            embeddings = extract_embeddings(text_features)
+            embeddings = embeddings / embeddings.norm(dim=-1, keepdim=True)
 
-        return text_features.cpu()
+        return embeddings.cpu()
 
     def encode_image(self, image) -> torch.Tensor:
         """Encode image to embedding"""
@@ -50,8 +52,9 @@ class CLIPService:
 
         with torch.no_grad():
             image_features = self.model.get_image_features(**image_inputs)
-            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-        return image_features.cpu()
+            embeddings = extract_embeddings(image_features)
+            embeddings = embeddings / embeddings.norm(dim=-1, keepdim=True)
+        return embeddings.cpu()
 
 
 clip_service = CLIPService()
