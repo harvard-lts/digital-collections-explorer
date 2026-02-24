@@ -152,10 +152,14 @@ class TestGetEmbeddingCount:
 
         assert count == 10
 
-    def test_get_embedding_count_not_loaded(self, embedding_service):
-        """Test getting count when embeddings are not loaded"""
+    @patch("pathlib.Path.exists")
+    def test_get_embedding_count_not_loaded(self, mock_exists, embedding_service):
+        """Test that count is 0 when no embedding files exist on disk"""
+        mock_exists.return_value = False
+
         count = embedding_service.get_embedding_count()
 
+        assert embedding_service.is_loaded is False
         assert count == 0
 
 
