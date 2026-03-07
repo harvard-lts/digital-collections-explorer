@@ -14,19 +14,20 @@ We present Digital Collections Explorer, a web-based, open-source exploratory se
 
 ## Features
 
-- Multimodal search capabilities using both text and image inputs
+- **Multiple embedding models**: CLIP and SigLIP support with easy configuration
+- **GPU acceleration**: NVIDIA CUDA and Apple Silicon (M1/M2/M3/M4) support
+- **Multimodal search**: Both text and image-based queries
 - Support for various digital collection types:
   - Historical maps
   - Photographs
   - Born-digital documents
-- Fine-tuned CLIP models for improved accuracy (coming soon)
 - User-friendly web interface for exploration
 
 ## Quick Start Guide
 
 ### Prerequisites
 
-- Python 3.8+ 
+- Python 3.8+
 - Node.js 14+
 - Git
 - Docker (optional, for containerized deployment)
@@ -46,6 +47,7 @@ npm run setup -- --type=photographs
 ```
 
 Available collection types:
+
 - `photographs`: For photo collections and image archives
 - `maps`: For map collections
 - `documents`: For born-digital documents collections
@@ -82,6 +84,49 @@ python -m src.backend.main
 ```
 
 The API server will start at http://localhost:8000
+
+## Model Configuration
+
+The system supports multiple embedding models. Configure your preferred model in `config.json`:
+
+### Using CLIP (default)
+
+```json
+{
+  "model_config": {
+    "model_type": "clip",
+    "model_name": "openai/clip-vit-base-patch32",
+    "device": "mps"
+  }
+}
+```
+
+### Using SigLIP (recommended for better accuracy)
+
+```json
+{
+  "model_config": {
+    "model_type": "siglip",
+    "model_name": "google/siglip-base-patch16-224",
+    "device": "mps"
+  }
+}
+```
+
+**Device options:**
+
+- `"mps"` - Apple Silicon GPU (M1/M2/M3/M4)
+- `"cuda"` - NVIDIA GPU
+- `"cpu"` - CPU only
+
+** See [MODELS.md](MODELS.md)** for detailed model comparison, recommended configurations, and performance benchmarks.
+
+** See [APPLE_SILICON.md](APPLE_SILICON.md)** for Apple Silicon GPU setup and optimization.
+
+```
+# Verify MPS is available
+python -c "import torch; print('MPS:', torch.backends.mps.is_available())"
+```
 
 ### Customizing the Frontend
 

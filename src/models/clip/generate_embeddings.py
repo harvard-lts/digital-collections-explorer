@@ -11,9 +11,9 @@ import PyPDF2
 import torch
 from pdf2image import convert_from_path
 from PIL import Image
-from transformers import CLIPModel, CLIPProcessor
 
 from src.backend.core.config import settings
+from src.backend.services.embedding_service_factory import create_embedding_service
 from src.backend.utils.helpers import extract_embeddings
 
 logging.basicConfig(
@@ -305,24 +305,26 @@ def main():
     EMBEDDINGS_DIR = Path(settings.embeddings_dir)
     PROCESSED_DIR = Path(settings.processed_data_dir)
     THUMBNAILS_DIR = Path(settings.thumbnails_dir)
-    MODEL_ID = settings.clip_model
-    DEVICE = (
-        "cuda" if torch.cuda.is_available() and settings.device == "cuda" else "cpu"
-    )
 
-    logger.info(f"Using device: {DEVICE}")
     logger.info(f"Loading files from: {RAW_DATA_DIR}")
     logger.info(f"Saving embeddings to: {EMBEDDINGS_DIR}")
     logger.info(f"Saving processed images to: {PROCESSED_DIR}")
     logger.info(f"Saving thumbnails to: {THUMBNAILS_DIR}")
-    logger.info(f"Using model: {MODEL_ID}")
 
     EMBEDDINGS_DIR.mkdir(parents=True, exist_ok=True)
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     THUMBNAILS_DIR.mkdir(parents=True, exist_ok=True)
 
-    model = CLIPModel.from_pretrained(MODEL_ID).to(DEVICE)
-    processor = CLIPProcessor.from_pretrained(MODEL_ID)
+    # Create embedding service using factory
+    embedding_model_service = create_embedding_service()
+    logger.info(
+        f"Using {embedding_model_service.get_model_type().upper()} model: {embedding_model_service.model_name}"
+    )
+    logger.info(f"Using device: {embedding_model_service.device}")
+
+    model = embedding_model_service.model
+    processor = embedding_model_service.processor
+    DEVICE = embedding_model_service.device
 
     embedding_timing_info = {"total_duration": 0.0}
 

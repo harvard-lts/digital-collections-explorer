@@ -5,8 +5,10 @@ from fastapi import APIRouter, File, Form, Query, UploadFile
 from PIL import Image
 
 from ...models.schemas import SearchResponse, SearchResult
-from ...services.clip_service import clip_service
 from ...services.embedding_service import embedding_service
+from ...services.embedding_service_factory import (
+    embedding_service as model_service,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/search", tags=["search"])
@@ -25,8 +27,8 @@ async def search_by_text(
         if not embedding_service.is_loaded:
             embedding_service.load_embeddings()
 
-        text_embedding = clip_service.encode_text(query)
-        logit_scale = clip_service.model.logit_scale.exp().item()
+        text_embedding = model_service.encode_text(query)
+        logit_scale = model_service.model.logit_scale.exp().item()
         raw_results = embedding_service.search(
             text_embedding, logit_scale=logit_scale, limit=limit, offset=offset
         )
@@ -55,7 +57,7 @@ async def search_by_image(
     try:
         image_data = await image.read()
         image = Image.open(BytesIO(image_data)).convert("RGB")
-        image_embedding = clip_service.encode_image(image)
+        image_embedding = model_service.encode_image(image)
         raw_results = embedding_service.search(
             image_embedding, limit=limit, offset=offset
         )

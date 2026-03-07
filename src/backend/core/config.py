@@ -13,10 +13,14 @@ class Settings(BaseSettings):
     port: int = 8000
     debug: bool = True
 
-    # CLIP model settings
-    clip_model: str = "openai/clip-vit-base-patch32"
-    device: str = "cuda"
+    # Embedding model settings
+    model_type: str = "clip"  # Options: "clip", "siglip"
+    model_name: str = "openai/clip-vit-base-patch32"
+    device: str = "cuda"  # Options: "cuda" (NVIDIA GPU), "mps" (Apple Silicon GPU), "cpu"
     batch_size: int = 32
+
+    # Backward compatibility
+    clip_model: str = "openai/clip-vit-base-patch32"  # Deprecated: use model_name instead
 
     # Data directories
     collection_type: str = (
@@ -45,13 +49,19 @@ def load_config():
         settings_dict["port"] = api_config.get("port", 8000)
         settings_dict["debug"] = api_config.get("debug", True)
 
-        # CLIP model settings
+        # Embedding model settings
         model_config = config_data.get("model_config", {})
-        settings_dict["clip_model"] = model_config.get(
-            "clip_model", "openai/clip-vit-base-patch32"
+
+        # Support new model_type and model_name fields
+        settings_dict["model_type"] = model_config.get("model_type", "clip")
+        settings_dict["model_name"] = model_config.get(
+            "model_name", model_config.get("clip_model", "openai/clip-vit-base-patch32")
         )
         settings_dict["device"] = model_config.get("device", "cuda")
         settings_dict["batch_size"] = model_config.get("batch_size", 32)
+
+        # Backward compatibility: keep clip_model in sync
+        settings_dict["clip_model"] = settings_dict["model_name"]
 
         # Data directories
         settings_dict["collection_type"] = config_data.get(
