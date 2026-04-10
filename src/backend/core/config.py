@@ -2,25 +2,35 @@ import json
 from pathlib import Path
 
 from pydantic_settings import BaseSettings
+from enum import Enum
 
+class ModelType(str, Enum):
+    CLIP = "clip"
+    SIGLIP = "siglip"
+
+class DeviceType(str, Enum):
+    CUDA = "cuda"
+    MPS = "mps"
+    CPU = "cpu"
 
 class Settings(BaseSettings):
     # API settings
     api_title: str = "Digital Collections Explorer API"
-    api_description: str = "API for searching collections using CLIP embeddings"
-    api_version: str = "0.1.0"
+    api_description: str = "API for searching collections using CLIP or SigLIP embeddings"
+    api_version: str = "0.1.1"
     host: str = "0.0.0.0"
     port: int = 8000
     debug: bool = True
 
-    # Embedding model settings
-    model_type: str = "clip"  # Options: "clip", "siglip"
+    # Embedding model default settings
+    model_type: ModelType = ModelType.CLIP
     model_name: str = "openai/clip-vit-base-patch32"
-    device: str = "cuda"  # Options: "cuda" (NVIDIA GPU), "mps" (Apple Silicon GPU), "cpu"
+    device: DeviceType = DeviceType.CUDA
     batch_size: int = 32
 
     # Backward compatibility
-    clip_model: str = "openai/clip-vit-base-patch32"  # Deprecated: use model_name instead
+    # Deprecated: use model_name instead
+    clip_model: str = "openai/clip-vit-base-patch32"
 
     # Data directories
     collection_type: str = (

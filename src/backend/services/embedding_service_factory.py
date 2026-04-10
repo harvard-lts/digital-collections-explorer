@@ -35,7 +35,9 @@ def create_embedding_service() -> BaseEmbeddingService:
     Raises:
         ValueError: If model_type is not supported
     """
-    model_type = settings.model_type.lower()
+
+    # Set default model type to clip if not set in config for backwards compatibility
+    model_type = settings.model_type.lower() or "clip"
     model_name = settings.model_name
     device = settings.device
 

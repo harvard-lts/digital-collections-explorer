@@ -14,13 +14,12 @@ We present Digital Collections Explorer, a web-based, open-source exploratory se
 
 ## Features
 
-- **Multiple embedding models**: CLIP and SigLIP support with easy configuration
-- **GPU acceleration**: NVIDIA CUDA and Apple Silicon (M1/M2/M3/M4) support
-- **Multimodal search**: Both text and image-based queries
+- Multimodal search capabilities using both text and image inputs
 - Support for various digital collection types:
   - Historical maps
   - Photographs
   - Born-digital documents
+- Fine-tuned CLIP and SigLIP models for improved accuracy (coming soon)
 - User-friendly web interface for exploration
 
 ## Quick Start Guide
@@ -87,7 +86,7 @@ The API server will start at http://localhost:8000
 
 ## Model Configuration
 
-The system supports multiple embedding models. Configure your preferred model in `config.json`:
+Configure the model in `config.json`:
 
 ### Using CLIP (default)
 
@@ -101,7 +100,7 @@ The system supports multiple embedding models. Configure your preferred model in
 }
 ```
 
-### Using SigLIP (recommended for better accuracy)
+### Using SigLIP
 
 ```json
 {
@@ -119,13 +118,11 @@ The system supports multiple embedding models. Configure your preferred model in
 - `"cuda"` - NVIDIA GPU
 - `"cpu"` - CPU only
 
-** See [MODELS.md](MODELS.md)** for detailed model comparison, recommended configurations, and performance benchmarks.
 
-** See [APPLE_SILICON.md](APPLE_SILICON.md)** for Apple Silicon GPU setup and optimization.
+## Unit tests
 
 ```
-# Verify MPS is available
-python -c "import torch; print('MPS:', torch.backends.mps.is_available())"
+pytest
 ```
 
 ### Customizing the Frontend
