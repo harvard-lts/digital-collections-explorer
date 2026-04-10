@@ -13,8 +13,7 @@ from pdf2image import convert_from_path
 from PIL import Image
 
 from src.backend.core.config import settings
-from src.backend.services.embedding_service_factory import \
-    create_embedding_service
+from src.backend.services.embedding_service_factory import create_embedding_service
 from src.backend.utils.helpers import extract_embeddings
 
 logging.basicConfig(
