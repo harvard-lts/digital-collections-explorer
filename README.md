@@ -102,6 +102,8 @@ Configure the model in `config.json`:
 
 ### Using SigLIP
 
+This project also supports [SigLIP](https://arxiv.org/abs/2303.15343) which is an open-source multimodal embedding model created by Google DeepMind.
+
 ```json
 {
   "model_config": {

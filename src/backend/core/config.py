@@ -1,22 +1,27 @@
 import json
+from enum import Enum
 from pathlib import Path
 
 from pydantic_settings import BaseSettings
-from enum import Enum
+
 
 class ModelType(str, Enum):
     CLIP = "clip"
     SIGLIP = "siglip"
+
 
 class DeviceType(str, Enum):
     CUDA = "cuda"
     MPS = "mps"
     CPU = "cpu"
 
+
 class Settings(BaseSettings):
     # API settings
     api_title: str = "Digital Collections Explorer API"
-    api_description: str = "API for searching collections using CLIP or SigLIP embeddings"
+    api_description: str = (
+        "API for searching collections using CLIP or SigLIP embeddings"
+    )
     api_version: str = "0.1.1"
     host: str = "0.0.0.0"
     port: int = 8000

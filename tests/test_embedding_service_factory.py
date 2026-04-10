@@ -7,7 +7,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.backend.services.clip_service import CLIPService
-from src.backend.services.embedding_service_factory import create_embedding_service
+from src.backend.services.embedding_service_factory import \
+    create_embedding_service
 from src.backend.services.siglip_service import SiglipService
 
 
@@ -57,9 +58,7 @@ class TestEmbeddingServiceFactory:
         mock_settings.model_name = "some/model"
         mock_settings.device = "cpu"
 
-        with pytest.raises(
-            ValueError, match="Unsupported model_type: invalid_model"
-        ):
+        with pytest.raises(ValueError, match="Unsupported model_type: invalid_model"):
             create_embedding_service()
 
     @patch("src.backend.services.embedding_service_factory.CLIPService")
