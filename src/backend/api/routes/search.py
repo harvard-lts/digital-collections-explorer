@@ -6,7 +6,8 @@ from PIL import Image
 
 from ...models.schemas import SearchResponse, SearchResult
 from ...services.embedding_service import embedding_service
-from ...services.embedding_service_factory import embedding_service as model_service
+from ...services.embedding_service_factory import \
+    embedding_service as model_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/search", tags=["search"])
