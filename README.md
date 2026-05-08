@@ -1,6 +1,7 @@
 # Digital Collections Explorer
 
-[![DOI](https://zenodo.org/badge/917426819.svg)](https://zenodo.org/badge/latestdoi/917426819)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15744570.svg)](https://doi.org/10.5281/zenodo.15744570)
+[![arXiv](https://img.shields.io/badge/arXiv-2507.00961-b31b1b.svg)](https://arxiv.org/abs/2507.00961)
 
 A web-based exploratory search system leveraging CLIP (Contrastive Language-Image Pre-training) models for enhanced discovery of digital collections, including maps, photographs, and born-digital documents.
 
@@ -183,7 +184,3 @@ For detailed guidelines, please read [CONTRIBUTING.md](CONTRIBUTING.md).
 ### Code of Conduct
 
 This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
-
-## References
-
-Mahowald, J., & Lee, B. C. G. (2024). Integrating Visual and Textual Inputs for Searching Large-Scale Map Collections with CLIP. arXiv:2410.01190 [cs.IR]. https://arxiv.org/abs/2410.01190
