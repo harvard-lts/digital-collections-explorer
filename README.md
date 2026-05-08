@@ -19,14 +19,14 @@ We present Digital Collections Explorer, a web-based, open-source exploratory se
   - Historical maps
   - Photographs
   - Born-digital documents
-- Fine-tuned CLIP models for improved accuracy (coming soon)
+- Fine-tuned CLIP and SigLIP models for improved accuracy (coming soon)
 - User-friendly web interface for exploration
 
 ## Quick Start Guide
 
 ### Prerequisites
 
-- Python 3.8+ 
+- Python 3.8+
 - Node.js 14+
 - Git
 - Docker (optional, for containerized deployment)
@@ -46,6 +46,7 @@ npm run setup -- --type=photographs
 ```
 
 Available collection types:
+
 - `photographs`: For photo collections and image archives
 - `maps`: For map collections
 - `documents`: For born-digital documents collections
@@ -82,6 +83,49 @@ python -m src.backend.main
 ```
 
 The API server will start at http://localhost:8000
+
+## Model Configuration
+
+Configure the model in `config.json`:
+
+### Using CLIP (default)
+
+```json
+{
+  "model_config": {
+    "model_type": "clip",
+    "model_name": "openai/clip-vit-base-patch32",
+    "device": "mps"
+  }
+}
+```
+
+### Using SigLIP
+
+This project also supports [SigLIP](https://arxiv.org/abs/2303.15343) which is an open-source multimodal embedding model created by Google DeepMind.
+
+```json
+{
+  "model_config": {
+    "model_type": "siglip",
+    "model_name": "google/siglip-base-patch16-224",
+    "device": "mps"
+  }
+}
+```
+
+**Device options:**
+
+- `"mps"` - Apple Silicon GPU (M1/M2/M3/M4)
+- `"cuda"` - NVIDIA GPU
+- `"cpu"` - CPU only
+
+
+## Unit tests
+
+```
+pytest
+```
 
 ### Customizing the Frontend
 

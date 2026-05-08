@@ -1,22 +1,41 @@
 import json
+from enum import Enum
 from pathlib import Path
 
 from pydantic_settings import BaseSettings
 
 
+class ModelType(str, Enum):
+    CLIP = "clip"
+    SIGLIP = "siglip"
+
+
+class DeviceType(str, Enum):
+    CUDA = "cuda"
+    MPS = "mps"
+    CPU = "cpu"
+
+
 class Settings(BaseSettings):
     # API settings
     api_title: str = "Digital Collections Explorer API"
-    api_description: str = "API for searching collections using CLIP embeddings"
-    api_version: str = "0.1.0"
+    api_description: str = (
+        "API for searching collections using CLIP or SigLIP embeddings"
+    )
+    api_version: str = "0.1.1"
     host: str = "0.0.0.0"
     port: int = 8000
     debug: bool = True
 
-    # CLIP model settings
-    clip_model: str = "openai/clip-vit-base-patch32"
-    device: str = "cuda"
+    # Embedding model default settings
+    model_type: ModelType = ModelType.CLIP
+    model_name: str = "openai/clip-vit-base-patch32"
+    device: DeviceType = DeviceType.CUDA
     batch_size: int = 32
+
+    # Backward compatibility
+    # Deprecated: use model_name instead
+    clip_model: str = "openai/clip-vit-base-patch32"
 
     # Data directories
     collection_type: str = (
@@ -45,13 +64,19 @@ def load_config():
         settings_dict["port"] = api_config.get("port", 8000)
         settings_dict["debug"] = api_config.get("debug", True)
 
-        # CLIP model settings
+        # Embedding model settings
         model_config = config_data.get("model_config", {})
-        settings_dict["clip_model"] = model_config.get(
-            "clip_model", "openai/clip-vit-base-patch32"
+
+        # Support new model_type and model_name fields
+        settings_dict["model_type"] = model_config.get("model_type", "clip")
+        settings_dict["model_name"] = model_config.get(
+            "model_name", model_config.get("clip_model", "openai/clip-vit-base-patch32")
         )
         settings_dict["device"] = model_config.get("device", "cuda")
         settings_dict["batch_size"] = model_config.get("batch_size", 32)
+
+        # Backward compatibility: keep clip_model in sync
+        settings_dict["clip_model"] = settings_dict["model_name"]
 
         # Data directories
         settings_dict["collection_type"] = config_data.get(

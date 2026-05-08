@@ -49,7 +49,7 @@ class TestCLIPServiceInitialization:
         mock_model_class.from_pretrained = MagicMock(return_value=mock_model)
         mock_processor_class.from_pretrained = MagicMock()
 
-        service = CLIPService()
+        service = CLIPService(model_name="openai/clip-vit-base-patch32", device="cpu")
 
         assert service.device == "cpu"
         assert service.model is not None
@@ -69,14 +69,48 @@ class TestCLIPServiceInitialization:
         mock_model_class.from_pretrained = MagicMock(return_value=mock_model)
         mock_processor_class.from_pretrained = MagicMock()
 
-        # Mock settings to use cuda
-        with patch("src.backend.services.clip_service.settings") as mock_settings:
-            mock_settings.device = "cuda"
-            mock_settings.clip_model = "openai/clip-vit-base-patch32"
-            service = CLIPService()
+        service = CLIPService(model_name="openai/clip-vit-base-patch32", device="cuda")
 
-            # Device should be set to cuda when available
-            assert service.device == "cuda"
+        # Device should be set to cuda when available
+        assert service.device == "cuda"
+
+    @patch("src.backend.services.clip_service.CLIPModel")
+    @patch("src.backend.services.clip_service.CLIPProcessor")
+    @patch("src.backend.services.clip_service.torch.backends.mps.is_available")
+    def test_init_with_mps_available(
+        self, mock_mps_available, mock_processor_class, mock_model_class
+    ):
+        """Test initialization when MPS (Apple Silicon) is available"""
+        mock_mps_available.return_value = True
+        mock_model = MagicMock()
+        mock_model.eval = MagicMock()
+        mock_model.to = MagicMock(return_value=mock_model)
+        mock_model_class.from_pretrained = MagicMock(return_value=mock_model)
+        mock_processor_class.from_pretrained = MagicMock()
+
+        service = CLIPService(model_name="openai/clip-vit-base-patch32", device="mps")
+
+        # Device should be set to mps when available
+        assert service.device == "mps"
+
+    @patch("src.backend.services.clip_service.CLIPModel")
+    @patch("src.backend.services.clip_service.CLIPProcessor")
+    @patch("src.backend.services.clip_service.torch.backends.mps.is_available")
+    def test_init_with_mps_unavailable_fallback_to_cpu(
+        self, mock_mps_available, mock_processor_class, mock_model_class
+    ):
+        """Test initialization falls back to CPU when MPS is requested but unavailable"""
+        mock_mps_available.return_value = False
+        mock_model = MagicMock()
+        mock_model.eval = MagicMock()
+        mock_model.to = MagicMock(return_value=mock_model)
+        mock_model_class.from_pretrained = MagicMock(return_value=mock_model)
+        mock_processor_class.from_pretrained = MagicMock()
+
+        service = CLIPService(model_name="openai/clip-vit-base-patch32", device="mps")
+
+        # Device should fall back to CPU
+        assert service.device == "cpu"
 
     @patch("src.backend.services.clip_service.CLIPModel")
     @patch("src.backend.services.clip_service.CLIPProcessor")
@@ -88,7 +122,7 @@ class TestCLIPServiceInitialization:
         mock_model_class.from_pretrained = MagicMock(return_value=mock_model)
         mock_processor_class.from_pretrained = MagicMock()
 
-        service = CLIPService()
+        service = CLIPService(model_name="openai/clip-vit-base-patch32", device="cpu")
 
         # Verify model and processor were loaded
         mock_model_class.from_pretrained.assert_called_once()
@@ -109,7 +143,7 @@ class TestLoadModel:
         mock_processor = MagicMock()
         mock_processor_class.from_pretrained = MagicMock(return_value=mock_processor)
 
-        service = CLIPService()
+        service = CLIPService(model_name="openai/clip-vit-base-patch32", device="cpu")
 
         assert service.model is not None
         assert service.processor is not None
@@ -124,7 +158,7 @@ class TestLoadModel:
         )
 
         with pytest.raises(Exception, match="Model not found"):
-            CLIPService()
+            CLIPService(model_name="openai/clip-vit-base-patch32", device="cpu")
 
 
 class TestEncodeText:
@@ -155,7 +189,7 @@ class TestEncodeText:
         # Mock extract_embeddings to return normalized features
         mock_extract.return_value = mock_features
 
-        service = CLIPService()
+        service = CLIPService(model_name="openai/clip-vit-base-patch32", device="cpu")
         result = service.encode_text(["test text"])
 
         assert isinstance(result, torch.Tensor)
@@ -186,7 +220,7 @@ class TestEncodeText:
 
         mock_extract.return_value = mock_features
 
-        service = CLIPService()
+        service = CLIPService(model_name="openai/clip-vit-base-patch32", device="cpu")
         result = service.encode_text(["text 1", "text 2"])
 
         assert isinstance(result, torch.Tensor)
@@ -216,7 +250,7 @@ class TestEncodeText:
 
         mock_extract.return_value = mock_features
 
-        service = CLIPService()
+        service = CLIPService(model_name="openai/clip-vit-base-patch32", device="cpu")
         result = service.encode_text(["test"])
 
         # Check that result is on CPU
@@ -249,7 +283,7 @@ class TestEncodeImage:
 
         mock_extract.return_value = mock_features
 
-        service = CLIPService()
+        service = CLIPService(model_name="openai/clip-vit-base-patch32", device="cpu")
 
         # Create a simple test image
         test_image = Image.new("RGB", (224, 224), color="red")
@@ -282,7 +316,7 @@ class TestEncodeImage:
 
         mock_extract.return_value = mock_features
 
-        service = CLIPService()
+        service = CLIPService(model_name="openai/clip-vit-base-patch32", device="cpu")
         test_image = Image.new("RGB", (224, 224), color="blue")
         result = service.encode_image(test_image)
 
